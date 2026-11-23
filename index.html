@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Siswa — Rohman Capture Academy</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#ff6b00',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        },
+                        obsidian: '#010101',
+                        darkcard: '#111111',
+                        darkborder: '#222222'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EXIF Reader, QR Code Generator & Scanner, HTML2PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff6b00; }
+        .aspect-a4 { aspect-ratio: 1 / 1.414; }
+        .a4-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        .a4-landscape {
+            width: 297mm;
+            min-height: 210mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-obsidian text-slate-800 dark:text-gray-200 min-h-screen flex flex-col">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- GLOBAL SYNC LOADER -->
+    <div id="sync-overlay" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 p-4">
+        <div class="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
+        <p id="sync-text" class="text-xs font-bold text-white text-center tracking-wide">Memproses permintaan...</p>
+        <div id="batch-progress-box" class="hidden w-full max-w-xs space-y-1.5 mt-2">
+            <div class="w-full bg-darkcard rounded-full h-2.5 overflow-hidden border border-darkborder">
+                <div id="batch-progress-bar" class="bg-brand-500 h-2.5 transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="batch-progress-label" class="text-[11px] text-center text-gray-300">0 / 0 foto</p>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. AUTH SCREEN (LOGIN & REGISTRASI SISWA BARU)                        -->
+    <!-- ===================================================================== -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-obsidian relative overflow-hidden">
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="w-full max-w-md bg-darkcard border border-darkborder p-7 sm:p-8 rounded-2xl shadow-2xl relative z-10">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-500/10 text-brand-500 rounded-2xl mb-3 border border-brand-500/30">
+                    <i class="fa-solid fa-camera-retro text-3xl"></i>
+                </div>
+                <span class="block text-[10px] font-bold tracking-[0.2em] text-brand-500 uppercase">PORTAL ANGGOTA EKSKUL</span>
+                <h1 class="text-2xl font-extrabold text-white mt-1">Rohman Capture Academy</h1>
+                <p class="text-xs text-gray-400 mt-1">SMK Negeri 65 Jakarta & MA Al-Hikmah Jakarta</p>
+            </div>
+
+            <!-- Switcher Login / Daftar -->
+            <div class="grid grid-cols-2 gap-1 p-1 bg-obsidian rounded-xl border border-darkborder mb-5 text-xs font-bold">
+                <button id="tab-login-btn" onclick="switchAuthTab('login')" class="py-2 rounded-lg bg-brand-500 text-white transition">Masuk Akun</button>
+                <button id="tab-reg-btn" onclick="switchAuthTab('register')" class="py-2 rounded-lg text-gray-400 hover:text-white transition">Daftar Anggota Baru</button>
+            </div>
+
+            <!-- FORM LOGIN -->
+            <form id="login-form" onsubmit="handleStudentLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Email Terdaftar</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="email" id="login-email" required placeholder="nama@gmail.com" class="w-full pl-10 pr-4 py-2.5 bg-obsidian border border-darkborder rounded-xl text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Kata Sandi</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-obsidian border border-darkborder rounded-xl text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-lg shadow-brand-500/20 text-sm flex items-center justify-center gap-2">
+                    <span>Masuk Portal Siswa</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <!-- FORM REGISTRASI SISWA BARU -->
+            <form id="register-form" onsubmit="handleStudentRegister(event)" class="space-y-3 hidden text-xs">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Nama Lengkap</label>
+                        <input type="text" id="reg-fullname" required placeholder="Rian Ardianto" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Nama Panggilan</label>
+                        <input type="text" id="reg-nickname" required placeholder="Rian" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-400 mb-1">Asal Sekolah</label>
+                    <select id="reg-school" onchange="toggleRegJurusanField(this.value)" required class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                        <option value="SMK Negeri 65 Jakarta">SMK Negeri 65 Jakarta</option>
+                        <option value="MA Al-Hikmah Jakarta">MA Al-Hikmah Jakarta</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Kelas</label>
+                        <input type="text" id="reg-class" required placeholder="Contoh: X DKV 1 / XI IPA 2" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div id="reg-jurusan-wrapper">
+                        <label class="block font-semibold text-gray-400 mb-1">Jurusan (Khusus SMK)</label>
+                        <input type="text" id="reg-jurusan" required placeholder="Contoh: DKV / RPL / BC" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-400 mb-1">Foto Profil Siswa (Wajib untuk Kartu Anggota)</label>
+                    <input type="file" id="reg-photo" accept="image/*" required onchange="previewRegProfilePhoto(event)" class="w-full text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-brand-500/20 file:text-brand-500 file:font-bold bg-obsidian border border-darkborder rounded-xl p-1">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Email Aktif</label>
+                        <input type="email" id="reg-email" required placeholder="siswa@gmail.com" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Buat Kata Sandi</label>
+                        <input type="password" id="reg-password" required minlength="5" placeholder="Min. 5 karakter" class="w-full px-3 py-2 bg-obsidian border border-darkborder rounded-xl text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-gray-300">
+                    <i class="fa-solid fa-shield-halved text-brand-500 mr-1"></i> Setelah mendaftar, akun akan diverifikasi oleh Pengajar sebelum bisa login.
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-lg shadow-brand-500/20">
+                    Kirim Pendaftaran Anggota
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. MAIN STUDENT DASHBOARD                                             -->
+    <!-- ===================================================================== -->
+    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col md:flex-row">
+
+        <!-- SIDEBAR -->
+        <aside class="w-full md:w-64 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-darkborder flex flex-col justify-between shrink-0">
+            <div>
+                <div class="p-5 border-b border-slate-200 dark:border-darkborder flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-brand-500 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-brand-500/20">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-extrabold text-slate-900 dark:text-white text-sm leading-tight">Capture Academy</h2>
+                            <span class="text-[10px] text-brand-500 font-bold tracking-widest uppercase">PORTAL MURID</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Mini Profile -->
+                <div class="p-3.5 mx-4 mt-4 bg-slate-100 dark:bg-obsidian rounded-2xl border border-slate-200 dark:border-darkborder flex items-center gap-3">
+                    <img id="sb-avatar" src="" alt="Profil" class="w-11 h-11 rounded-xl object-cover border border-brand-500/40 shrink-0">
+                    <div class="overflow-hidden">
+                        <h4 id="sb-name" class="text-xs font-extrabold text-slate-900 dark:text-white truncate">Siswa</h4>
+                        <p id="sb-class" class="text-[10px] text-brand-500 font-bold truncate">Kelas</p>
+                        <p id="sb-school" class="text-[10px] text-gray-500 truncate">Sekolah</p>
+                    </div>
+                </div>
+
+                <!-- Theme & Sync Controls -->
+                <div class="px-4 pt-3 flex gap-2">
+                    <button onclick="toggleTheme()" class="flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition flex items-center justify-center gap-1.5">
+                        <i id="theme-icon" class="fa-solid fa-sun text-brand-500"></i>
+                        <span id="theme-label">Light Mode</span>
+                    </button>
+                    <button onclick="syncStudentData(true)" title="Refresh Data" class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
+                        <i class="fa-solid fa-rotate text-brand-500"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav class="p-4 space-y-1" id="sidebar-nav"></nav>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 dark:border-darkborder">
+                <button onclick="handleStudentLogout()" class="w-full py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-red-500/20">
+                    <i class="fa-solid fa-right-from-bracket"></i> Keluar Akun
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN WORKSPACE -->
+        <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
+            <header class="p-4 md:px-8 border-b border-slate-200 dark:border-darkborder bg-white/80 dark:bg-darkcard/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
+                <div>
+                    <h1 id="page-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Dashboard Siswa</h1>
+                    <p id="page-subtitle" class="text-xs text-gray-500">Menciptakan Kebahagiaan lewat Karya Visual.</p>
+                </div>
+                <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="header-school-badge">Anggota Aktif</span>
+                </span>
+            </header>
+
+            <div id="content-area" class="p-4 md:p-8 space-y-6 flex-1"></div>
+        </main>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALS (LIGHTBOX DETAIL FOTO, PDF READER, ALBUM A4 & SERTIFIKAT A4)   -->
+    <!-- ===================================================================== -->
+
+    <!-- MODAL DETAIL FOTO & RIWAYAT VERSI -->
+    <div id="photo-modal" class="fixed inset-0 z-50 bg-black/90 hidden backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative max-w-4xl w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            <button onclick="closePhotoModal()" class="absolute top-3 right-3 z-10 w-8 h-8 bg-black/70 hover:bg-brand-500 text-white rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="md:w-7/12 bg-black flex items-center justify-center p-3">
+                <img id="pm-img" src="" class="max-h-[75vh] w-auto object-contain rounded-xl">
+            </div>
+            <div class="md:w-5/12 p-6 overflow-y-auto space-y-4 text-xs">
+                <div>
+                    <span id="pm-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-500">Karya</span>
+                    <h3 id="pm-title" class="text-base font-extrabold text-slate-900 dark:text-white mt-2">Judul</h3>
+                    <p id="pm-author" class="text-brand-500 font-semibold mt-0.5">Oleh</p>
+                </div>
+
+                <div class="p-3 rounded-xl bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-1.5">
+                    <p class="font-bold text-slate-800 dark:text-white">Parameter Teknis & EXIF:</p>
+                    <p><strong>Kamera:</strong> <span id="pm-camera">-</span></p>
+                    <p><strong>Lensa & Alat:</strong> <span id="pm-gear">-</span></p>
+                    <p><strong>EXIF:</strong> ISO <span id="pm-iso">-</span> • <span id="pm-shutter">-</span> • <span id="pm-aperture">-</span></p>
+                    <p><strong>Lokasi:</strong> <span id="pm-location">-</span></p>
+                </div>
+
+                <div>
+                    <p class="font-bold mb-1">Cerita / Konsep Foto:</p>
+                    <p id="pm-desc" class="italic text-gray-500 leading-relaxed">...</p>
+                </div>
+
+                <div id="pm-review-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PRINT PREVIEW A4 (ALBUM PORTOFOLIO / E-SERTIFIKAT) -->
+    <div id="a4-preview-modal" class="fixed inset-0 z-50 bg-black/90 hidden backdrop-blur-md flex flex-col p-4">
+        <div class="max-w-5xl w-full mx-auto bg-darkcard border border-darkborder rounded-t-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                <h3 id="a4-modal-title" class="text-sm font-bold text-white">Pratinjau Dokumen A4</h3>
+                <p id="a4-modal-sub" class="text-xs text-gray-400">Siap diunduh dalam format PDF resolusi tinggi.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="executeDownloadA4PDF()" id="btn-download-a4" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF Sekarang
+                </button>
+                <button onclick="closeA4Modal()" class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-xl">Tutup</button>
+            </div>
+        </div>
+        <div class="max-w-5xl w-full mx-auto flex-1 bg-neutral-900 overflow-y-auto p-6 rounded-b-2xl border-x border-b border-darkborder">
+            <div id="a4-render-target"></div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT CORE LOGIC                                                 -->
+    <!-- ===================================================================== -->
+    <script>
+        // URL WEB APP GOOGLE APPS SCRIPT SUROHMAN
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxgxQp-wSAgzUuEuZmhiG89swgBNTyC-K3Aj5KQO2GAmUvWzve1-2smVAllLlnE0U6v9A/exec";
+
+        // STATE
+        let studentUser = JSON.parse(localStorage.getItem("rc_student_user")) || null;
+        let db = { siswa: [], perencanaan: [], jurnal: [], presensi: [], tugas: [], materi: [], settings: {} };
+        let activeTab = "overview";
+        let regProfileBase64 = "";
+        let studentQrScanner = null;
+
+        // Batch Upload Queue State
+        let uploadQueueItems = [];
+        let revisionTargetTask = null;
+
+        // Portfolio Builder State
+        let selectedPortfolioIds = new Set();
+        let portfolioTemplate = "editorial"; // 'editorial' | 'grid' | 'dark'
+        let currentA4Orientation = "portrait";
+        let currentA4Filename = "Dokumen_A4.pdf";
+
+        // =====================================================================
+        // 1. IMAGE COMPRESSION (TAJAM NAMUN RINGAN) & AUTO-EXIF READER
+        // =====================================================================
+        function compressImageFile(file, maxDimension = 1920, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = Math.round((height * maxDimension) / width);
+                                width = maxDimension;
+                            } else {
+                                width = Math.round((width * maxDimension) / height);
+                                height = maxDimension;
+                            }
+                        }
+                        const canvas = document.createElement("canvas");
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = "high";
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL("image/jpeg", quality));
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function extractExifMetadata(file) {
+            try {
+                if (typeof exifr === "undefined") return {};
+                const data = await exifr.parse(file, ["Make", "Model", "ISO", "ExposureTime", "FNumber", "LensModel"]);
+                if (!data) return {};
+
+                const camera = [data.Make, data.Model].filter(Boolean).join(" ").trim() || "";
+                const iso = data.ISO ? String(data.ISO) : "";
+                let shutter = "";
+                if (data.ExposureTime) {
+                    shutter = data.ExposureTime < 1
+                        ? `1/${Math.round(1 / data.ExposureTime)}s`
+                        : `${data.ExposureTime}s`;
+                }
+                const aperture = data.FNumber ? `f/${data.FNumber}` : "";
+                const lens = data.LensModel || "";
+                return { camera, iso, shutter, aperture, lens };
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // =====================================================================
+        // 2. API CLIENT & SYNC
+        // =====================================================================
+        async function callGAS(payload, showOverlay = true, text = "Menyinkronkan data...") {
+            if (showOverlay) {
+                document.getElementById("sync-text").innerText = text;
+                document.getElementById("batch-progress-box").classList.add("hidden");
+                document.getElementById("sync-overlay").classList.remove("hidden");
+                document.getElementById("sync-overlay").classList.add("flex");
+            }
+            try {
+                const res = await fetch(GAS_WEBAPP_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            } catch (err) {
+                showToast("Gangguan jaringan: " + err.message, "error");
+                return { status: "error", message: err.message };
+            } finally {
+                if (showOverlay) {
+                    document.getElementById("sync-overlay").classList.add("hidden");
+                    document.getElementById("sync-overlay").classList.remove("flex");
+                }
+            }
+        }
+
+        async function syncStudentData(notify = false) {
+            const res = await callGAS({ action: "getAllData" }, true, "Memuat data terbaru dari server...");
+            if (res.status === "ok" && res.data) {
+                db = res.data;
+                // Sinkronkan profil terbaru user dari sheet Siswa
+                const freshMe = db.siswa.find(s => String(s.ID_Siswa) === String(studentUser.id));
+                if (freshMe) {
+                    studentUser.name = freshMe.Nama_Lengkap;
+                    studentUser.nickname = freshMe.Nama_Panggilan;
+                    studentUser.school = freshMe.Sekolah;
+                    studentUser.className = freshMe.Kelas;
+                    studentUser.jurusan = freshMe.Jurusan;
+                    studentUser.photoUrl = freshMe.Foto_Profil_URL;
+                    localStorage.setItem("rc_student_user", JSON.stringify(studentUser));
+                    updateSidebarProfileUI();
+                }
+                if (notify) showToast("Data berhasil diperbarui!");
+                renderCurrentTab();
+            }
+        }
+
+        // =====================================================================
+        // 3. THEME, AUTH & REGISTRASI SISWA
+        // =====================================================================
+        let isDark = localStorage.getItem("rc_student_theme") !== "light";
+
+        function applyTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById("theme-icon");
+            const lbl = document.getElementById("theme-label");
+            if (isDark) {
+                html.classList.add("dark");
+                if (icon) icon.className = "fa-solid fa-sun text-brand-500";
+                if (lbl) lbl.innerText = "Light Mode";
+            } else {
+                html.classList.remove("dark");
+                if (icon) icon.className = "fa-solid fa-moon text-brand-500";
+                if (lbl) lbl.innerText = "Dark Mode";
+            }
+            localStorage.setItem("rc_student_theme", isDark ? "dark" : "light");
+        }
+
+        function toggleTheme() { isDark = !isDark; applyTheme(); }
+
+        function switchAuthTab(mode) {
+            const isLogin = mode === "login";
+            document.getElementById("login-form").classList.toggle("hidden", !isLogin);
+            document.getElementById("register-form").classList.toggle("hidden", isLogin);
+            document.getElementById("tab-login-btn").className = isLogin ? "py-2 rounded-lg bg-brand-500 text-white transition" : "py-2 rounded-lg text-gray-400 hover:text-white transition";
+            document.getElementById("tab-reg-btn").className = !isLogin ? "py-2 rounded-lg bg-brand-500 text-white transition" : "py-2 rounded-lg text-gray-400 hover:text-white transition";
+        }
+
+        function toggleRegJurusanField(schoolVal) {
+            const box = document.getElementById("reg-jurusan-wrapper");
+            const inp = document.getElementById("reg-jurusan");
+            const isSMK = schoolVal.toUpperCase().includes("SMK");
+            box.classList.toggle("hidden", !isSMK);
+            inp.required = isSMK;
+        }
+
+        async function previewRegProfilePhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            regProfileBase64 = await compressImageFile(file, 600, 0.85);
+            showToast("Foto profil siap!");
+        }
+
+        async function handleStudentLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById("login-email").value.trim();
+            const password = document.getElementById("login-password").value.trim();
+            const res = await callGAS({ action: "login", email, password }, true, "Memverifikasi akun...");
+            if (res.status === "ok" && res.user && res.user.role === "siswa") {
+                studentUser = res.user;
+                localStorage.setItem("rc_student_user", JSON.stringify(studentUser));
+                showToast("Selamat datang, " + (studentUser.nickname || studentUser.name) + "!");
+                initStudentDashboard();
+            } else {
+                showToast(res.message || "Gagal login! Periksa email & kata sandi.", "error");
+            }
+        }
+
+        async function handleStudentRegister(e) {
+            e.preventDefault();
+            const sekolah = document.getElementById("reg-school").value;
+            const payload = {
+                action: "registerStudent",
+                namaLengkap: document.getElementById("reg-fullname").value.trim(),
+                namaPanggilan: document.getElementById("reg-nickname").value.trim(),
+                sekolah: sekolah,
+                kelas: document.getElementById("reg-class").value.trim(),
+                jurusan: sekolah.toUpperCase().includes("SMK") ? document.getElementById("reg-jurusan").value.trim() : "-",
+                email: document.getElementById("reg-email").value.trim(),
+                password: document.getElementById("reg-password").value.trim(),
+                fotoProfilBase64: regProfileBase64
+            };
+            const res = await callGAS(payload, true, "Mengirim pendaftaran ke server...");
+            if (res.status === "ok") {
+                showToast(res.message);
+                switchAuthTab("login");
+            } else {
+                showToast(res.message || "Pendaftaran gagal.", "error");
+            }
+        }
+
+        function handleStudentLogout() {
+            studentUser = null;
+            localStorage.removeItem("rc_student_user");
+            stopStudentScanner();
+            document.getElementById("dashboard-screen").classList.add("hidden");
+            document.getElementById("auth-screen").classList.remove("hidden");
+        }
+
+        function updateSidebarProfileUI() {
+            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=ff6b00&color=fff";
+            document.getElementById("sb-avatar").src = studentUser.photoUrl || fallbackAvatar;
+            document.getElementById("sb-name").innerText = studentUser.name;
+            document.getElementById("sb-class").innerText = `${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}`;
+            document.getElementById("sb-school").innerText = studentUser.school;
+            document.getElementById("header-school-badge").innerText = studentUser.school;
+        }
+
+        async function initStudentDashboard() {
+            document.getElementById("auth-screen").classList.add("hidden");
+            document.getElementById("dashboard-screen").classList.remove("hidden");
+            updateSidebarProfileUI();
+            await syncStudentData(false);
+            // Default pilih semua karya masuk ke portfolio builder
+            getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
+            switchTab("overview");
+        }
+
+        // =====================================================================
+        // 4. NAVIGATION & HELPERS
+        // =====================================================================
+        function getMySubmissions() {
+            return db.tugas.filter(t => String(t.ID_Siswa) === String(studentUser.id));
+        }
+
+        function setupNavigation() {
+            const needRevisionCount = getMySubmissions().filter(t => String(t.Perlu_Revisi) === "Ya").length;
+            const navItems = [
+                { id: "overview", label: "Dashboard Siswa", icon: "fa-house" },
+                { id: "misi", label: "Papan Misi & Brief", icon: "fa-bullseye" },
+                { id: "materi", label: "Materi & Silabus", icon: "fa-book-open" },
+                { id: "upload", label: "Kirim Tugas Foto", icon: "fa-cloud-arrow-up", badge: needRevisionCount > 0 ? needRevisionCount : null },
+                { id: "hall", label: "Hall of Frame", icon: "fa-trophy" },
+                { id: "tools", label: "Pocket Tools", icon: "fa-sliders" },
+                { id: "portfolio", label: "Portfolioku (PDF A4)", icon: "fa-images" },
+                { id: "badges", label: "Lencana & Sertifikat", icon: "fa-award" },
+                { id: "card", label: "Kartu Anggota & Absen", icon: "fa-id-card" }
+            ];
+
+            document.getElementById("sidebar-nav").innerHTML = navItems.map(item => `
+                <button onclick="switchTab('${item.id}')" class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-between ${activeTab === item.id ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-obsidian hover:text-slate-900 dark:hover:text-white'}">
+                    <span class="flex items-center gap-2.5">
+                        <i class="fa-solid ${item.icon} w-4 text-center"></i>
+                        <span>${item.label}</span>
+                    </span>
+                    ${item.badge ? `<span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-500 text-black">Revisi (${item.badge})</span>` : ''}
+                </button>
+            `).join("");
+        }
+
+        function switchTab(tabId) {
+            if (activeTab === "card" && tabId !== "card") stopStudentScanner();
+            activeTab = tabId;
+            setupNavigation();
+            renderCurrentTab();
+        }
+
+        function renderCurrentTab() {
+            setupNavigation();
+            const area = document.getElementById("content-area");
+            const title = document.getElementById("page-title");
+            const sub = document.getElementById("page-subtitle");
+
+            const headers = {
+                overview: ["Dashboard Siswa", `Halo ${studentUser.nickname || studentUser.name}, siap berkarya hari ini?`],
+                misi: ["Papan Misi & Brief Tugas", "Baca panduan teknis dan tenggat waktu sebelum hunting foto."],
+                materi: ["Materi & Silabus E-Course", "Modul video, E-Book PDF A4, dan cheatsheet untuk semua angkatan."],
+                upload: ["Kirim Tugas Foto (Batch & Auto-EXIF)", "Unggah hingga ratusan foto sekaligus dengan kompresi tajam otomatis."],
+                hall: [`Hall of Frame — ${studentUser.school}`, "Karya terbaik pilihan pengajar dari rekan satu sekolahmu."],
+                tools: ["Pocket Tools Fotografer", "Simulator Segitiga Eksposure, Kalkulator DoF & Checklist Hunting."],
+                portfolio: ["Portfolioku & Cetak Album A4", "Pilih karya terbaikmu dan susun dengan berbagai template album A4."],
+                badges: ["Lencana Keahlian & E-Sertifikat", "Kumpulkan lencana praktik dan unduh sertifikat kelulusan ekskul."],
+                card: ["Kartu Anggota Digital & Absensi", "QR Code kehadiran, rekap absensi, dan pembaruan kenaikan kelas."]
+            };
+
+            if (headers[activeTab]) {
+                title.innerText = headers[activeTab][0];
+                sub.innerText = headers[activeTab][1];
+            }
+
+            if (activeTab === "overview") renderStudentOverview(area);
+            else if (activeTab === "misi") renderPapanMisi(area);
+            else if (activeTab === "materi") renderStudentMateri(area);
+            else if (activeTab === "upload") renderBatchUploadPage(area);
+            else if (activeTab === "hall") renderHallOfFrame(area);
+            else if (activeTab === "tools") renderPocketTools(area);
+            else if (activeTab === "portfolio") renderPortfolioBuilder(area);
+            else if (activeTab === "badges") renderBadgesAndCert(area);
+            else if (activeTab === "card") renderMemberCardAndProfile(area);
+        }
+
+        // =====================================================================
+        // 5. OVERVIEW SISWA
+        // =====================================================================
+        function computeMyAttendance() {
+            const pRow = db.presensi.find(r => String(r.ID_Siswa) === String(studentUser.id)) || {};
+            const pCols = Object.keys(pRow).filter(k => /^P\d+$/.test(k));
+            let hadir = 0, valid = 0;
+            pCols.forEach(c => {
+                const v = pRow[c] || "-";
+                if (v !== "-") { valid++; if (v === "H") hadir++; }
+            });
+            const pct = valid > 0 ? Math.round((hadir / valid) * 100) : 0;
+            return { hadir, valid, pct, pRow, pCols };
+        }
+
+        function renderStudentOverview(container) {
+            const mySubs = getMySubmissions();
+            const graded = mySubs.filter(t => t.Status_Penilaian === "Sudah Dinilai");
+            const avgScore = graded.length > 0
+                ? (graded.reduce((a, b) => a + Number(b.Nilai_Akhir_Karya || 0), 0) / graded.length).toFixed(1)
+                : "-";
+            const att = computeMyAttendance();
+            const revisionList = mySubs.filter(t => String(t.Perlu_Revisi) === "Ya");
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">Total Karya Terkirim</p>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">${mySubs.length} Foto</h3>
+                            <span class="text-[11px] text-brand-500 font-semibold">${graded.length} sudah dinilai</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center border border-brand-500/20">
+                            <i class="fa-solid fa-camera text-xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">Rata-rata Nilai Karya</p>
+                            <h3 class="text-2xl font-extrabold text-emerald-500 mt-1">${avgScore}</h3>
+                            <span class="text-[11px] text-gray-500">Evaluasi Rubrik Pengajar</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
+                            <i class="fa-solid fa-star text-xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">Kehadiran Ekskul</p>
+                            <h3 class="text-2xl font-extrabold text-sky-500 mt-1">${att.pct}%</h3>
+                            <span class="text-[11px] text-gray-500">Hadir ${att.hadir} dari ${att.valid} sesi</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+                            <i class="fa-solid fa-qrcode text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                ${revisionList.length > 0 ? `
+                    <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h4 class="text-sm font-bold text-amber-500">Ada ${revisionList.length} Tugas Memerlukan Revisi</h4>
+                            <p class="text-xs text-gray-400">Pengajar meminta kamu memperbaiki karya pada tugas yang sama (riwayat versi lama tetap tersimpan).</p>
+                        </div>
+                        <button onclick="switchTab('upload')" class="px-4 py-2 bg-amber-500 text-black text-xs font-extrabold rounded-xl whitespace-nowrap">Kirim Revisi Sekarang</button>
+                    </div>
+                ` : ''}
+
+                <!-- Riwayat Tugas & Hasil Penilaian -->
+                <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Riwayat Tugas & Evaluasi Terbaru</h3>
+                        <button onclick="switchTab('upload')" class="px-3.5 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl">+ Kirim Tugas Baru</button>
+                    </div>
+                    <div class="space-y-3">
+                        ${mySubs.map(t => `
+                            <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <img src="${t.Foto_URL}" class="w-14 h-14 rounded-xl object-cover cursor-pointer border border-darkborder" onclick="openPhotoModal('${t.ID_Tugas}')">
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="text-xs font-extrabold text-slate-900 dark:text-white">${t.Judul_Tugas}</h4>
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder">Versi ${t.Versi || 1}</span>
+                                            ${String(t.Perlu_Revisi) === "Ya" ? `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-black">Perlu Revisi</span>` : ''}
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">${t.Tanggal_Kirim} • ${t.Kamera} • ISO ${t.ISO} | ${t.Shutter} | ${t.Aperture}</p>
+                                        ${t.Feedback_Pengajar ? `<p class="text-[11px] text-brand-500 italic mt-1">"${t.Feedback_Pengajar}"</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                    ${t.Status_Penilaian === "Sudah Dinilai"
+                                        ? `<span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-500 text-xs font-extrabold">Skor: ${t.Nilai_Akhir_Karya}</span>`
+                                        : `<span class="px-3 py-1 rounded-xl bg-brand-500/15 text-brand-500 text-[11px] font-bold">Menunggu Nilai</span>`
+                                    }
+                                    ${String(t.Perlu_Revisi) === "Ya" ? `
+                                        <button onclick="startRevisionUpload('${t.ID_Tugas}')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-extrabold">
+                                            <i class="fa-solid fa-rotate-right mr-1"></i> Revisi (v${Number(t.Versi || 1) + 1})
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('') || '<p class="text-xs text-gray-500 italic text-center py-6">Kamu belum mengumpulkan tugas foto.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // =====================================================================
+        // 6. PAPAN MISI & BRIEF TUGAS + MATERI E-COURSE
+        // =====================================================================
+        function renderPapanMisi(container) {
+            const mySchoolUnit = String(studentUser.school).toUpperCase().includes("SMK") ? "SMK" : "MA";
+            const missions = db.perencanaan.filter(r => r.Sekolah === "SMK & MA" || String(r.Sekolah).toUpperCase().includes(mySchoolUnit));
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${missions.map(m => `
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                            <div class="space-y-2.5">
+                                <div class="flex justify-between items-center">
+                                    <span class="px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-500 text-xs font-extrabold">${m.Pertemuan}</span>
+                                    ${m.Deadline_Tugas ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-500 text-[11px] font-bold"><i class="fa-regular fa-clock mr-1"></i>Deadline: ${m.Deadline_Tugas}</span>` : ''}
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${m.Topik}</h3>
+                                <p class="text-xs text-gray-400 leading-relaxed">${m.Deskripsi || 'Ikuti arahan praktik dari pengajar saat sesi berlangsung.'}</p>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs space-y-1">
+                                    <p><strong>Metode:</strong> ${m.Metode}</p>
+                                    <p><strong>Lokasi Praktik:</strong> ${m.Lokasi}</p>
+                                    <p class="text-brand-500 font-semibold"><strong>Target Output:</strong> ${m.Target_Output}</p>
+                                </div>
+                            </div>
+                            <button onclick="quickSelectMissionForUpload('${m.Topik.replace(/'/g, "\\'")}')" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition">
+                                <i class="fa-solid fa-camera mr-1"></i> Kerjakan & Upload Foto Misi Ini
+                            </button>
+                        </div>
+                    `).join('') || '<p class="col-span-full text-center py-12 text-xs text-gray-500">Belum ada papan misi yang diterbitkan pengajar.</p>'}
+                </div>
+            `;
+        }
+
+        function quickSelectMissionForUpload(missionTitle) {
+            revisionTargetTask = null;
+            switchTab("upload");
+            setTimeout(() => {
+                const sel = document.getElementById("up-task-select");
+                if (sel) {
+                    const exists = [...sel.options].some(o => o.value === missionTitle);
+                    if (!exists) {
+                        const opt = new Option(missionTitle, missionTitle, true, true);
+                        sel.add(opt, 0);
+                    } else {
+                        sel.value = missionTitle;
+                    }
+                }
+            }, 50);
+        }
+
+        function renderStudentMateri(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${db.materi.map(m => {
+                        const isPdf = m.Format === "ebook" || m.Format === "cheatsheet";
+                        return `
+                            <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-brand-500/15 text-brand-500">${m.Format} • ${m.Kategori}</span>
+                                    <span class="text-xs text-gray-500">${m.Durasi_Baca || ''}</span>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${m.Judul}</h3>
+                                <p class="text-xs text-gray-400 leading-relaxed">${m.Rangkuman}</p>
+                                ${!isPdf && m.Video_URL ? `
+                                    <div class="aspect-video rounded-xl overflow-hidden bg-black border border-darkborder">
+                                        <iframe class="w-full h-full" src="${m.Video_URL}" frameborder="0" allowfullscreen></iframe>
+                                    </div>
+                                ` : ''}
+                                ${isPdf ? `
+                                    <div class="flex items-center gap-4 pt-2">
+                                        ${m.Cover_URL ? `<img src="${m.Cover_URL}" class="w-20 aspect-a4 rounded-lg object-cover border border-darkborder">` : ''}
+                                        <div class="space-y-2">
+                                            <p class="text-xs text-gray-500">${m.Jumlah_Halaman || 10} Halaman (Format A4)</p>
+                                            ${m.File_PDF_URL ? `<a href="${m.File_PDF_URL}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-file-pdf"></i> Buka / Unduh PDF</a>` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('') || '<p class="col-span-full text-center py-12 text-xs text-gray-500">Belum ada materi pembelajaran yang diterbitkan.</p>'}
+                </div>
+            `;
+        }
+
+        // =====================================================================
+        // 7. KIRIM TUGAS FOTO BATCH (HINGGA RATUSAN FOTO + AUTO-EXIF + REVISI)
+        // =====================================================================
+        function startRevisionUpload(idTugas) {
+            const target = getMySubmissions().find(t => String(t.ID_Tugas) === String(idTugas));
+            if (!target) return;
+            revisionTargetTask = target;
+            switchTab("upload");
+        }
+
+        function renderBatchUploadPage(container) {
+            const asgs = JSON.parse(db.settings.assignmentsJSON || '["Tugas 1: Komposisi & Framing"]');
+            const todayISO = new Date().toISOString().split("T")[0];
+            const isRev = Boolean(revisionTargetTask);
+
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 md:p-8 rounded-2xl space-y-6">
+                    ${isRev ? `
+                        <div class="p-4 rounded-xl bg-amber-500/15 border border-amber-500/40 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-extrabold uppercase text-amber-500">MODE UNGGAH REVISI (VERSI ${Number(revisionTargetTask.Versi || 1) + 1})</span>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-white">${revisionTargetTask.Judul_Tugas}</h4>
+                            </div>
+                            <button onclick="revisionTargetTask=null; renderCurrentTab()" class="text-xs text-gray-400 underline">Batal Revisi</button>
+                        </div>
+                    ` : ''}
+
+                    <form onsubmit="executeBatchPhotoUpload(event)" class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block font-bold mb-1">Judul Tugas / Proyek Fotografi</label>
+                                <select id="up-task-select" ${isRev ? 'disabled' : ''} onchange="document.getElementById('up-custom-box').classList.toggle('hidden', this.value !== '__custom__')" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl font-semibold">
+                                    ${isRev
+                                        ? `<option value="${revisionTargetTask.Judul_Tugas}" selected>${revisionTargetTask.Judul_Tugas}</option>`
+                                        : asgs.map(a => `<option value="${a}">${a}</option>`).join('') + `<option value="__custom__">+ Tulis Judul Tugas Custom...</option>`
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold mb-1">Tanggal Pengumpulan</label>
+                                <input type="date" id="up-date" value="${todayISO}" required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
+                            </div>
+                        </div>
+
+                        <div id="up-custom-box" class="hidden">
+                            <label class="block font-bold text-brand-500 mb-1">Nama Tugas Custom</label>
+                            <input type="text" id="up-custom-title" placeholder="Ketik judul proyek foto..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-obsidian border border-brand-500/40 rounded-xl">
+                        </div>
+
+                        <!-- Dropzone Multi-File (Ratusan Foto Sekaligus) -->
+                        <div>
+                            <label class="block font-bold mb-1">Pilih Foto (Bisa Pilih 1 hingga Ratusan Foto Sekaligus — Auto-EXIF & Kompresi Tajam)</label>
+                            <div class="border-2 border-dashed border-slate-300 dark:border-darkborder hover:border-brand-500 rounded-2xl p-6 text-center relative cursor-pointer transition">
+                                <input type="file" id="up-multi-files" accept="image/*" multiple onchange="handleMultiFileSelection(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                                <i class="fa-solid fa-images text-3xl text-brand-500 mb-2"></i>
+                                <p class="font-bold text-slate-900 dark:text-white">Klik atau Seret Banyak Foto ke Sini</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Sistem otomatis membaca data Kamera, ISO, Shutter & Aperture dari setiap file JPG asli.</p>
+                            </div>
+                        </div>
+
+                        <!-- Default Metadata (Digunakan jika EXIF kosong / foto dari WhatsApp) -->
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-3">
+                            <p class="font-bold text-brand-500">Data Default (Otomatis terisi jika EXIF terbaca, bisa diedit manual):</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Kamera / HP</label>
+                                    <input type="text" id="up-def-camera" placeholder="Sony a6000 / Smartphone" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Lensa & Alat Bantu</label>
+                                    <input type="text" id="up-def-gear" placeholder="Lensa 35mm, Tripod..." class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Lokasi Pemotretan</label>
+                                    <input type="text" id="up-def-location" placeholder="Sekolah / Taman Ria Rio" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">ISO Default</label>
+                                    <input type="text" id="up-def-iso" placeholder="200" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Shutter Default</label>
+                                    <input type="text" id="up-def-shutter" placeholder="1/250s" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Aperture Default</label>
+                                    <input type="text" id="up-def-aperture" placeholder="f/2.8" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-gray-500 mb-1">Cerita / Deskripsi Konsep Pemotretan</label>
+                                <textarea id="up-def-desc" rows="2" required placeholder="Jelaskan konsep foto, komposisi, atau cerita di balik pemotretan ini..." class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Preview Antrean File Terpilih -->
+                        <div id="batch-queue-preview" class="space-y-2"></div>
+
+                        <button type="submit" id="btn-submit-batch" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Unggah Semua Foto ke Server Pengajar
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        async function handleMultiFileSelection(e) {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+
+            uploadQueueItems = [];
+            const previewBox = document.getElementById("batch-queue-preview");
+            previewBox.innerHTML = `<p class="text-xs font-bold text-brand-500"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Membaca EXIF & menyiapkan ${files.length} foto...</p>`;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const exif = await extractExifMetadata(file);
+                uploadQueueItems.push({
+                    file: file,
+                    name: file.name,
+                    camera: exif.camera || "",
+                    lens: exif.lens || "",
+                    iso: exif.iso || "",
+                    shutter: exif.shutter || "",
+                    aperture: exif.aperture || ""
+                });
+            }
+
+            // Jika foto pertama punya EXIF, otomatis isi kolom default agar praktis
+            if (uploadQueueItems[0].camera && !document.getElementById("up-def-camera").value) {
+                document.getElementById("up-def-camera").value = uploadQueueItems[0].camera;
+            }
+            if (uploadQueueItems[0].iso && !document.getElementById("up-def-iso").value) {
+                document.getElementById("up-def-iso").value = uploadQueueItems[0].iso;
+            }
+            if (uploadQueueItems[0].shutter && !document.getElementById("up-def-shutter").value) {
+                document.getElementById("up-def-shutter").value = uploadQueueItems[0].shutter;
+            }
+            if (uploadQueueItems[0].aperture && !document.getElementById("up-def-aperture").value) {
+                document.getElementById("up-def-aperture").value = uploadQueueItems[0].aperture;
+            }
+
+            previewBox.innerHTML = `
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex justify-between items-center">
+                    <span class="font-bold text-emerald-500"><i class="fa-solid fa-check-circle mr-1"></i> ${uploadQueueItems.length} Foto Siap Diunggah</span>
+                    <span class="text-[11px] text-gray-400">Kompresi pintar aktif (Maks 1920px, tajam & ringan)</span>
+                </div>
+                <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    ${uploadQueueItems.map((item, idx) => `
+                        <div class="p-2 rounded-lg bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex justify-between items-center text-[11px]">
+                            <span class="truncate max-w-[55%] font-semibold">${idx + 1}. ${item.name}</span>
+                            <span class="text-gray-500">${item.camera || 'Manual EXIF'} • ${item.iso ? 'ISO ' + item.iso : 'Auto'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function executeBatchPhotoUpload(e) {
+            e.preventDefault();
+            if (uploadQueueItems.length === 0) {
+                showToast("Pilih minimal 1 foto terlebih dahulu!", "error");
+                return;
+            }
+
+            const selVal = document.getElementById("up-task-select").value;
+            const judulTugas = selVal === "__custom__"
+                ? (document.getElementById("up-custom-title").value.trim() || "Tugas Fotografi")
+                : selVal;
+
+            const defCam = document.getElementById("up-def-camera").value || "Kamera / HP";
+            const defGear = document.getElementById("up-def-gear").value || "-";
+            const defLoc = document.getElementById("up-def-location").value || "-";
+            const defIso = document.getElementById("up-def-iso").value || "-";
+            const defShutter = document.getElementById("up-def-shutter").value || "-";
+            const defAperture = document.getElementById("up-def-aperture").value || "-";
+            const defDesc = document.getElementById("up-def-desc").value;
+            const tglKirim = document.getElementById("up-date").value;
+
+            const batchId = revisionTargetTask ? revisionTargetTask.Group_Batch_ID : ("BATCH-" + Date.now());
+            const versi = revisionTargetTask ? (Number(revisionTargetTask.Versi || 1) + 1) : 1;
+
+            // Tampilkan Overlay Progress Sequential Queue (Anti-Timeout untuk ratusan foto)
+            const overlay = document.getElementById("sync-overlay");
+            const progBox = document.getElementById("batch-progress-box");
+            const progBar = document.getElementById("batch-progress-bar");
+            const progLbl = document.getElementById("batch-progress-label");
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+            progBox.classList.remove("hidden");
+
+            let successCount = 0;
+            for (let i = 0; i < uploadQueueItems.length; i++) {
+                const item = uploadQueueItems[i];
+                const pct = Math.round(((i + 1) / uploadQueueItems.length) * 100);
+                document.getElementById("sync-text").innerText = `Mengompres & mengunggah foto ke-${i + 1} dari ${uploadQueueItems.length}...`;
+                progBar.style.width = `${pct}%`;
+                progLbl.innerText = `${i + 1} / ${uploadQueueItems.length} foto (${pct}%)`;
+
+                const compressedBase64 = await compressImageFile(item.file, 1920, 0.85);
+                const res = await callGAS({
+                    action: "submitPhotoItem",
+                    groupBatchId: batchId,
+                    versi: versi,
+                    idSiswa: studentUser.id,
+                    emailSiswa: studentUser.email,
+                    namaSiswa: studentUser.name,
+                    sekolah: studentUser.school,
+                    kelas: studentUser.className,
+                    judulTugas: judulTugas,
+                    photoBase64: compressedBase64,
+                    kamera: item.camera || defCam,
+                    lensaAlat: item.lens || defGear,
+                    lokasi: defLoc,
+                    iso: item.iso || defIso,
+                    shutter: item.shutter || defShutter,
+                    aperture: item.aperture || defAperture,
+                    deskripsi: defDesc,
+                    tanggalKirim: tglKirim
+                }, false);
+
+                if (res.status === "ok") successCount++;
+            }
+
+            overlay.classList.add("hidden");
+            overlay.classList.remove("flex");
+            progBox.classList.add("hidden");
+
+            uploadQueueItems = [];
+            revisionTargetTask = null;
+            showToast(`${successCount} foto berhasil diunggah ke sistem!`);
+            await syncStudentData(false);
+            getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
+            switchTab("overview");
+        }
+
+        // =====================================================================
+        // 8. HALL OF FRAME (TERPISAH PER SEKOLAH & READ-ONLY)
+        // =====================================================================
+        function renderHallOfFrame(container) {
+            const mySchool = String(studentUser.school || "").toUpperCase();
+            const isSMK = mySchool.includes("SMK");
+            const featured = db.tugas.filter(t => {
+                if (String(t.Hall_Of_Frame).toUpperCase() !== "TRUE") return false;
+                const tSchool = String(t.Sekolah || "").toUpperCase();
+                return isSMK ? tSchool.includes("SMK") : tSchool.includes("MA");
+            });
+
+            container.innerHTML = `
+                <div class="p-5 rounded-2xl bg-gradient-to-r from-brand-500/15 to-transparent border border-brand-500/30 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-500">KURASI EKSLUSIF PENGAJAR</span>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Karya Pilihan Unit ${studentUser.school}</h3>
+                        <p class="text-xs text-gray-400">Pelajari pengaturan EXIF & komposisi dari karya terbaik rekan satu sekolahmu.</p>
+                    </div>
+                    <i class="fa-solid fa-trophy text-3xl text-brand-500"></i>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${featured.map(t => `
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden group">
+                            <div class="relative h-60 bg-black overflow-hidden">
+                                <img src="${t.Foto_URL}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" onclick="openPhotoModal('${t.ID_Tugas}')">
+                                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-extrabold shadow">
+                                    <i class="fa-solid fa-star mr-1"></i> Karya Pilihan
+                                </span>
+                            </div>
+                            <div class="p-4 space-y-2">
+                                <h4 class="text-sm font-extrabold text-slate-900 dark:text-white">${t.Judul_Tugas}</h4>
+                                <p class="text-xs text-brand-500 font-bold">Karya: ${t.Nama_Siswa} (${t.Kelas})</p>
+                                <div class="flex flex-wrap gap-1.5 text-[10px] text-gray-400 pt-1">
+                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">${t.Kamera}</span>
+                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">ISO ${t.ISO}</span>
+                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">${t.Shutter}</span>
+                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">${t.Aperture}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('') || '<p class="col-span-full text-center py-12 text-xs text-gray-500">Belum ada karya yang disematkan ke Hall of Frame sekolahmu.</p>'}
+                </div>
+            `;
+        }
+
+        // =====================================================================
+        // 9. POCKET TOOLS (SIMULATOR EXPOSURE, KALKULATOR DoF & CHECKLIST)
+        // =====================================================================
+        function renderPocketTools(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Simulator Segitiga Eksposure -->
+                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
+                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-brand-500"></i> Simulator Visual Segitiga Eksposure
+                        </h3>
+                        <div class="relative h-48 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-darkborder">
+                            <img id="sim-preview-img" src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transition-all duration-200">
+                            <div id="sim-hud" class="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-lg bg-black/75 text-[11px] font-mono text-white flex justify-between">
+                                <span id="sim-status-text">Eksposure Seimbang (0 EV)</span>
+                                <span id="sim-blur-text">Tajam • Bokeh Sedang</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <div class="flex justify-between font-bold mb-1"><span>ISO (Sensitivitas Cahaya)</span><span id="lbl-sim-iso" class="text-brand-500">400</span></div>
+                                <input type="range" id="rng-iso" min="100" max="6400" step="100" value="400" oninput="updateExposureSim()" class="w-full accent-brand-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-bold mb-1"><span>Aperture (Bukaan Diafragma)</span><span id="lbl-sim-ap" class="text-brand-500">f/2.8</span></div>
+                                <input type="range" id="rng-ap" min="1.4" max="16" step="0.2" value="2.8" oninput="updateExposureSim()" class="w-full accent-brand-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-bold mb-1"><span>Shutter Speed (Kecepatan Rana)</span><span id="lbl-sim-sh" class="text-brand-500">1/250s</span></div>
+                                <input type="range" id="rng-sh" min="1" max="1000" step="10" value="250" oninput="updateExposureSim()" class="w-full accent-brand-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kalkulator Depth of Field & Checklist Hunting -->
+                    <div class="space-y-6">
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3 text-xs">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-ruler-combined text-brand-500"></i> Kalkulator Depth of Field (Ruang Tajam)
+                            </h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Focal Length (mm)</label>
+                                    <input type="number" id="dof-focal" value="50" oninput="calcDoF()" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-lg font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Aperture (f/)</label>
+                                    <input type="number" id="dof-ap" step="0.1" value="1.8" oninput="calcDoF()" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-lg font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Jarak Subjek (m)</label>
+                                    <input type="number" id="dof-dist" step="0.5" value="2" oninput="calcDoF()" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-lg font-bold">
+                                </div>
+                            </div>
+                            <div id="dof-result" class="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 font-bold text-brand-500">
+                                Ruang Tajam (DoF): ±0.15 meter (Background Bokeh Kuat)
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-2.5 text-xs">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-emerald-500"></i> Checklist Persiapan Hunting Foto
+                            </h3>
+                            ${[
+                                "Baterai kamera terisi penuh & bawa baterai cadangan",
+                                "Kartu memori (SD Card) sudah diformat & kosong",
+                                "Bersihkan permukaan depan lensa dengan kain microfiber",
+                                "Cek mode file (RAW + JPG) & White Balance sesuai cuaca",
+                                "Bawa reflektor lipat / tripod jika praktik outdoor/low-light"
+                            ].map(item => `
+                                <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 dark:bg-obsidian cursor-pointer">
+                                    <input type="checkbox" class="accent-brand-500 w-4 h-4">
+                                    <span>${item}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateExposureSim() {
+            const iso = Number(document.getElementById("rng-iso").value);
+            const ap = Number(document.getElementById("rng-ap").value);
+            const sh = Number(document.getElementById("rng-sh").value);
+
+            document.getElementById("lbl-sim-iso").innerText = iso;
+            document.getElementById("lbl-sim-ap").innerText = `f/${ap.toFixed(1)}`;
+            document.getElementById("lbl-sim-sh").innerText = `1/${sh}s`;
+
+            // Hitung kecerahan relatif terhadap baseline (ISO 400, f/2.8, 1/250s)
+            const brightness = Math.min(2.2, Math.max(0.25, (iso / 400) * (2.8 / ap) * (250 / sh)));
+            const blurPx = ap <= 2.2 ? 2.5 : (ap <= 5.6 ? 0.8 : 0);
+            const img = document.getElementById("sim-preview-img");
+            img.style.filter = `brightness(${brightness}) blur(${blurPx * 0.4}px)`;
+
+            const evText = brightness > 1.35 ? "Overexposed (Terlalu Terang)" : (brightness < 0.65 ? "Underexposed (Gelap)" : "Eksposure Seimbang");
+            const motionText = sh < 60 ? "Rawan Motion Blur" : (ap <= 2.8 ? "Bokeh Kuat" : "Ruang Tajam Luas");
+            document.getElementById("sim-status-text").innerText = evText;
+            document.getElementById("sim-blur-text").innerText = motionText;
+        }
+
+        function calcDoF() {
+            const f = Number(document.getElementById("dof-focal").value || 50);
+            const N = Number(document.getElementById("dof-ap").value || 1.8);
+            const d = Number(document.getElementById("dof-dist").value || 2) * 1000; // mm
+            const coc = 0.02; // APS-C circle of confusion
+            const H = (f * f) / (N * coc) + f;
+            const near = (d * (H - f)) / (H + d - 2 * f);
+            const far = d >= H ? Infinity : (d * (H - f)) / (H - d);
+            const dofMeters = far === Infinity ? "Tak Terhingga (Landscape)" : `${((far - near) / 1000).toFixed(2)} meter`;
+            document.getElementById("dof-result").innerText = `Estimasi Ruang Tajam (DoF): ${dofMeters}`;
+        }
+
+        // =====================================================================
+        // 10. PORTFOLIOKU DINAMIS (PILIH FOTO & 3 TEMPLATE ALBUM A4)
+        // =====================================================================
+        function renderPortfolioBuilder(container) {
+            const mySubs = getMySubmissions();
+            if (selectedPortfolioIds.size === 0 && mySubs.length > 0) {
+                mySubs.forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
+            }
+
+            container.innerHTML = `
+                <div class="bg-white dark:bg-darkcard border border-brand-500/30 p-6 rounded-2xl space-y-5">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-500">CUSTOM PORTFOLIO ALBUM BUILDER (A4)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Pilih Template & Susun Karya Fotografimu</h3>
+                            <p class="text-xs text-gray-400">Centang foto di bawah yang ingin dimasukkan ke buku album PDF A4 (${selectedPortfolioIds.size} foto dipilih).</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select onchange="portfolioTemplate=this.value" class="px-3 py-2.5 bg-slate-100 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl text-xs font-bold">
+                                <option value="editorial" ${portfolioTemplate === 'editorial' ? 'selected' : ''}>Template 1: Editorial Classic</option>
+                                <option value="grid" ${portfolioTemplate === 'grid' ? 'selected' : ''}>Template 2: Contact Sheet Grid (2 Kolom)</option>
+                                <option value="dark" ${portfolioTemplate === 'dark' ? 'selected' : ''}>Template 3: Dark Gallery Exhibition</option>
+                            </select>
+
+                            <button onclick="openAlbumA4Preview(false)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">
+                                <i class="fa-solid fa-images text-brand-500 mr-1"></i> Cetak Tanpa Nilai
+                            </button>
+                            <button onclick="openAlbumA4Preview(true)" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20">
+                                <i class="fa-solid fa-file-pdf mr-1"></i> Cetak Dengan Nilai
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${mySubs.map(t => {
+                            const checked = selectedPortfolioIds.has(String(t.ID_Tugas));
+                            return `
+                                <div onclick="togglePortfolioSelection('${t.ID_Tugas}')" class="cursor-pointer rounded-2xl border-2 overflow-hidden transition ${checked ? 'border-brand-500 bg-brand-500/5' : 'border-slate-200 dark:border-darkborder opacity-60'}">
+                                    <div class="relative h-44 bg-black">
+                                        <img src="${t.Foto_URL}" class="w-full h-full object-cover">
+                                        <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center ${checked ? 'bg-brand-500 text-white' : 'bg-black/60 text-gray-400'}">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 text-xs">
+                                        <h4 class="font-bold text-slate-900 dark:text-white truncate">${t.Judul_Tugas}</h4>
+                                        <p class="text-[11px] text-gray-500">${t.Tanggal_Kirim} ${t.Nilai_Akhir_Karya ? '• Skor: ' + t.Nilai_Akhir_Karya : ''}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') || '<p class="col-span-full text-center py-8 text-xs text-gray-500">Belum ada karya foto untuk disusun.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function togglePortfolioSelection(idTugas) {
+            const key = String(idTugas);
+            if (selectedPortfolioIds.has(key)) selectedPortfolioIds.delete(key);
+            else selectedPortfolioIds.add(key);
+            renderCurrentTab();
+        }
+
+        function openAlbumA4Preview(includeGrades) {
+            const chosen = getMySubmissions().filter(t => selectedPortfolioIds.has(String(t.ID_Tugas)));
+            if (chosen.length === 0) {
+                showToast("Pilih minimal 1 karya untuk dicetak!", "error");
+                return;
+            }
+
+            currentA4Orientation = "portrait";
+            currentA4Filename = `Portofolio_A4_${studentUser.name.replace(/\s+/g, "_")}.pdf`;
+            document.getElementById("a4-modal-title").innerText = `Pratinjau Album Portofolio A4 (${portfolioTemplate.toUpperCase()})`;
+            document.getElementById("a4-modal-sub").innerText = includeGrades ? "Mode: Dengan Nilai & Evaluasi Pengajar" : "Mode: Tanpa Nilai (Full Karya Fotografi)";
+
+            const isDarkTpl = portfolioTemplate === "dark";
+            const isGridTpl = portfolioTemplate === "grid";
+            const bgHex = isDarkTpl ? "#0a0a0a" : "#ffffff";
+            const textHex = isDarkTpl ? "#f3f4f6" : "#111827";
+            const cardBg = isDarkTpl ? "#161616" : "#f9fafb";
+            const borderHex = isDarkTpl ? "#2a2a2a" : "#e5e7eb";
+
+            const target = document.getElementById("a4-render-target");
+            target.innerHTML = `
+                <div class="a4-sheet" style="padding: 15mm; background: ${bgHex}; color: ${textHex}; font-family: 'Inter', sans-serif;">
+                    <div style="border-bottom: 3px solid #ff6b00; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <div style="font-size: 9px; font-weight: 800; color: #ff6b00; letter-spacing: 2px;">PORTFOLIO FOTOGRAFI RESMI</div>
+                            <h1 style="font-size: 24px; font-weight: 900; margin: 4px 0 0 0;">${studentUser.name}</h1>
+                            <p style="font-size: 12px; opacity: 0.8; margin-top: 2px;">${studentUser.className} • ${studentUser.school}</p>
+                        </div>
+                        <div style="text-align: right; font-size: 10px;">
+                            <strong style="color: #ff6b00;">Rohman Capture Academy</strong><br>
+                            <span>${new Date().toLocaleDateString('id-ID')}</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: ${isGridTpl ? '1fr 1fr' : '1fr'}; gap: 16px;">
+                        ${chosen.map((t, idx) => `
+                            <div style="border: 1px solid ${borderHex}; background: ${cardBg}; border-radius: 10px; padding: 12px; page-break-inside: avoid; display: flex; flex-direction: ${isGridTpl ? 'column' : 'row'}; gap: 14px;">
+                                <div style="width: ${isGridTpl ? '100%' : '46%'}; height: ${isGridTpl ? '170px' : '195px'}; background: #000; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                                    <img src="${t.Foto_URL}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #ff6b00;">
+                                            <span>KARYA #${idx + 1} • ${t.Tanggal_Kirim}</span>
+                                            ${includeGrades && t.Nilai_Akhir_Karya ? `<span style="background: #059669; color: #fff; padding: 2px 8px; border-radius: 99px;">Nilai: ${t.Nilai_Akhir_Karya}</span>` : ''}
+                                        </div>
+                                        <h3 style="font-size: 13px; font-weight: 800; margin: 4px 0;">${t.Judul_Tugas}</h3>
+                                        <p style="font-size: 10px; font-style: italic; opacity: 0.85; margin-bottom: 8px;">"${t.Deskripsi}"</p>
+                                        <div style="font-size: 9px; opacity: 0.8; border-top: 1px dashed ${borderHex}; padding-top: 6px;">
+                                            <strong>Gear:</strong> ${t.Kamera} (${t.Lensa_Alat || '-'})<br>
+                                            <strong>EXIF:</strong> ISO ${t.ISO} | ${t.Shutter} | ${t.Aperture}
+                                        </div>
+                                    </div>
+                                    ${includeGrades && t.Feedback_Pengajar ? `
+                                        <div style="margin-top: 8px; padding: 6px 8px; background: rgba(255,107,0,0.12); border-left: 3px solid #ff6b00; font-size: 9px;">
+                                            <strong>Catatan Pengajar:</strong> ${t.Feedback_Pengajar}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("a4-preview-modal").classList.remove("hidden");
+        }
+
+        // =====================================================================
+        // 11. SKILL BADGES & E-SERTIFIKAT KELULUSAN EKSKUL (PDF A4 LANDSCAPE)
+        // =====================================================================
+        function renderBadgesAndCert(container) {
+            const mySubs = getMySubmissions();
+            const graded = mySubs.filter(t => t.Status_Penilaian === "Sudah Dinilai");
+            const avg = graded.length > 0 ? graded.reduce((a, b) => a + Number(b.Nilai_Akhir_Karya || 0), 0) / graded.length : 0;
+            const att = computeMyAttendance();
+
+            const badges = [
+                { title: "First Shutter", desc: "Mengumpulkan karya foto pertama.", unlocked: mySubs.length >= 1, icon: "fa-camera" },
+                { title: "Consistent Shooter", desc: "Mengumpulkan minimal 5 karya foto.", unlocked: mySubs.length >= 5, icon: "fa-layer-group" },
+                { title: "High Achiever", desc: "Meraih rata-rata nilai karya di atas 85.", unlocked: avg >= 85 && graded.length >= 1, icon: "fa-award" },
+                { title: "Discipline Member", desc: "Tingkat kehadiran ekskul minimal 80%.", unlocked: att.pct >= 80 && att.valid >= 1, icon: "fa-calendar-check" }
+            ];
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    ${badges.map(b => `
+                        <div class="p-5 rounded-2xl border ${b.unlocked ? 'bg-white dark:bg-darkcard border-brand-500/40' : 'bg-slate-100 dark:bg-obsidian border-slate-200 dark:border-darkborder opacity-50'} space-y-2">
+                            <div class="w-11 h-11 rounded-xl ${b.unlocked ? 'bg-brand-500 text-white' : 'bg-gray-700 text-gray-400'} flex items-center justify-center">
+                                <i class="fa-solid ${b.icon} text-lg"></i>
+                            </div>
+                            <h4 class="text-xs font-extrabold text-slate-900 dark:text-white">${b.title}</h4>
+                            <p class="text-[11px] text-gray-500">${b.desc}</p>
+                            <span class="inline-block text-[10px] font-bold ${b.unlocked ? 'text-emerald-500' : 'text-gray-500'}">${b.unlocked ? 'TERBUKA' : 'TERKUNCI'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="bg-white dark:bg-darkcard border border-brand-500/30 p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest">E-SERTIFIKAT RESMI ACADEMY</span>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Sertifikat Kelulusan & Kompetensi Fotografi</h3>
+                        <p class="text-xs text-gray-400">Dapat diunduh dalam format PDF A4 Landscape sebagai portofolio akademik & karir.</p>
+                    </div>
+                    <button onclick="openCertificatePreview()" class="px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-500/20 whitespace-nowrap">
+                        <i class="fa-solid fa-certificate mr-1"></i> Generate E-Sertifikat A4
+                    </button>
+                </div>
+            `;
+        }
+
+        function openCertificatePreview() {
+            currentA4Orientation = "landscape";
+            currentA4Filename = `Sertifikat_Ekskul_Fotografi_${studentUser.name.replace(/\s+/g, "_")}.pdf`;
+            document.getElementById("a4-modal-title").innerText = "Pratinjau E-Sertifikat Ekskul Fotografi (A4 Landscape)";
+            document.getElementById("a4-modal-sub").innerText = "Dokumen sertifikat resmi ditandatangani instruktur.";
+
+            const target = document.getElementById("a4-render-target");
+            target.innerHTML = `
+                <div class="a4-landscape" style="padding: 18mm; background: #0a0a0a; color: #ffffff; font-family: 'Inter', sans-serif; border: 8px solid #ff6b00; display: flex; flex-direction: column; justify-content: space-between; text-align: center;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; letter-spacing: 4px; color: #ff6b00;">ROHMAN CAPTURE ACADEMY • EKSKUL FOTOGRAFI</div>
+                        <h1 style="font-size: 36px; font-weight: 900; letter-spacing: 2px; margin: 14px 0 4px 0;">SERTIFIKAT KOMPETENSI</h1>
+                        <p style="font-size: 12px; color: #9ca3af;">Nomor: RCA/${new Date().getFullYear()}/${studentUser.id}</p>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <p style="font-size: 13px; color: #d1d5db;">Diberikan dengan bangga kepada:</p>
+                        <h2 style="font-size: 32px; font-weight: 900; color: #ff6b00; margin: 10px 0; border-bottom: 2px solid #333; display: inline-block; padding: 0 28px 6px 28px;">${studentUser.name}</h2>
+                        <p style="font-size: 13px; font-weight: 600; color: #e5e7eb; margin-top: 6px;">${studentUser.className} — ${studentUser.school}</p>
+                        <p style="font-size: 12px; color: #9ca3af; max-width: 620px; margin: 14px auto 0 auto; line-height: 1.6;">
+                            Telah aktif mengikuti program pendidikan dan praktik lapangan Ekstrakurikuler Fotografi (Dasar Kamera, Pencahayaan, Komposisi, dan Visual Storytelling) pada Tahun Ajaran ${db.settings.ta || '2026/2027'}.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
+                        <div>
+                            <p style="font-size: 11px; color: #9ca3af;">Mengetahui,</p>
+                            <p style="font-size: 12px; font-weight: 700;">Unit ${studentUser.school}</p>
+                            <div style="height: 45px;"></div>
+                            <p style="font-size: 12px; font-weight: 700; border-top: 1px solid #555; padding-top: 4px;">Pembina Ekskul</p>
+                        </div>
+                        <div>
+                            <p style="font-size: 11px; color: #9ca3af;">Jakarta, ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+                            <p style="font-size: 12px; font-weight: 700;">Instruktur Utama Fotografi</p>
+                            <div style="height: 45px;"></div>
+                            <p style="font-size: 12px; font-weight: 800; color: #ff6b00; border-top: 1px solid #555; padding-top: 4px;">${db.settings.pengajar || 'Surohman'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById("a4-preview-modal").classList.remove("hidden");
+        }
+
+        function closeA4Modal() { document.getElementById("a4-preview-modal").classList.add("hidden"); }
+
+        function executeDownloadA4PDF() {
+            const el = document.getElementById("a4-render-target").firstElementChild;
+            const btn = document.getElementById("btn-download-a4");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses PDF...`;
+
+            html2pdf().set({
+                margin: 0,
+                filename: currentA4Filename,
+                image: { type: "jpeg", quality: 0.96 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: "mm", format: "a4", orientation: currentA4Orientation }
+            }).from(el).save().then(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-file-pdf"></i> Download PDF Sekarang`;
+                showToast("File PDF A4 berhasil diunduh!");
+            });
+        }
+
+        // =====================================================================
+        // 12. DIGITAL MEMBER CARD QR + SCANNER ABSEN + UPDATE NAIK KELAS
+        // =====================================================================
+        let updatedProfileBase64 = "";
+
+        function renderMemberCardAndProfile(container) {
+            const att = computeMyAttendance();
+            const isSMK = String(studentUser.school).toUpperCase().includes("SMK");
+            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=ff6b00&color=fff";
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Digital Member Card & QR -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-gradient-to-br from-darkcard via-obsidian to-darkcard border-2 border-brand-500/50 p-6 rounded-3xl shadow-2xl text-white space-y-5">
+                            <div class="flex justify-between items-center border-b border-darkborder pb-3">
+                                <div>
+                                    <span class="text-[9px] font-extrabold tracking-[0.2em] text-brand-500 uppercase">OFFICIAL MEMBER CARD</span>
+                                    <h4 class="text-sm font-extrabold">Rohman Capture Academy</h4>
+                                </div>
+                                <i class="fa-solid fa-camera-retro text-brand-500 text-xl"></i>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <img src="${studentUser.photoUrl || fallbackAvatar}" class="w-16 h-16 rounded-2xl object-cover border-2 border-brand-500">
+                                <div>
+                                    <h3 class="text-base font-extrabold leading-tight">${studentUser.name}</h3>
+                                    <p class="text-xs text-brand-500 font-bold">${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}</p>
+                                    <p class="text-[11px] text-gray-400">${studentUser.school}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl flex flex-col items-center justify-center">
+                                <div id="student-member-qr"></div>
+                                <p class="text-[10px] font-mono font-bold text-black mt-2">${studentUser.id}</p>
+                            </div>
+
+                            <button onclick="startStudentScanTeacherQR()" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-qrcode"></i> Scan QR Sesi Absen di Layar Pengajar
+                            </button>
+
+                            <div id="student-qr-scanner-box" class="hidden rounded-xl overflow-hidden border border-darkborder bg-black">
+                                <div id="student-qr-reader" class="w-full"></div>
+                                <button onclick="stopStudentScanner()" class="w-full py-2 bg-red-600 text-white text-xs font-bold">Tutup Kamera</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Update Naik Kelas & Rekap Kehadiran -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4 text-xs">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-user-pen text-brand-500"></i> Update Data Profil & Kenaikan Kelas
+                            </h3>
+                            <form onsubmit="submitUpdateStudentProfile(event)" class="space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-semibold mb-1">Nama Lengkap</label>
+                                        <input type="text" id="upd-fullname" value="${studentUser.name}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Nama Panggilan</label>
+                                        <input type="text" id="upd-nickname" value="${studentUser.nickname || ''}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-semibold mb-1">Kelas Sekarang (Update Saat Naik Kelas)</label>
+                                        <input type="text" id="upd-class" value="${studentUser.className}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-brand-500/40 rounded-xl font-bold text-brand-500">
+                                    </div>
+                                    ${isSMK ? `
+                                        <div>
+                                            <label class="block font-semibold mb-1">Jurusan SMK</label>
+                                            <input type="text" id="upd-jurusan" value="${studentUser.jurusan || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">Ganti Foto Profil (Opsional)</label>
+                                    <input type="file" accept="image/*" onchange="handleUpdateProfilePhoto(event)" class="w-full text-xs">
+                                </div>
+                                <button type="submit" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl">Simpan Perubahan Profil</button>
+                            </form>
+                        </div>
+
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3 text-xs">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Rekap Kehadiran Pertemuan</h3>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-500 font-extrabold">Kehadiran: ${att.pct}%</span>
+                            </div>
+                            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                                ${att.pCols.map(c => {
+                                    const st = att.pRow[c] || "-";
+                                    return `
+                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-center">
+                                            <span class="block text-[10px] text-gray-500 font-bold">${c}</span>
+                                            <span class="text-sm font-extrabold ${st === 'H' ? 'text-emerald-500' : (st === 'A' ? 'text-red-500' : 'text-brand-500')}">${st}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Render QR Kartu Anggota Siswa
+            const qrTarget = document.getElementById("student-member-qr");
+            if (qrTarget) {
+                qrTarget.innerHTML = "";
+                new QRCode(qrTarget, {
+                    text: JSON.stringify({ idSiswa: studentUser.id, nama: studentUser.name }),
+                    width: 150,
+                    height: 150
+                });
+            }
+        }
+
+        async function handleUpdateProfilePhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            updatedProfileBase64 = await compressImageFile(file, 600, 0.85);
+            showToast("Foto profil baru siap disimpan!");
+        }
+
+        async function submitUpdateStudentProfile(e) {
+            e.preventDefault();
+            const payload = {
+                action: "updateStudentProfile",
+                idSiswa: studentUser.id,
+                namaLengkap: document.getElementById("upd-fullname").value.trim(),
+                namaPanggilan: document.getElementById("upd-nickname").value.trim(),
+                kelas: document.getElementById("upd-class").value.trim(),
+                jurusan: document.getElementById("upd-jurusan")?.value.trim(),
+                fotoProfilBase64: updatedProfileBase64
+            };
+            updatedProfileBase64 = "";
+            const res = await callGAS(payload, true, "Memperbarui profil siswa...");
+            if (res.status === "ok") {
+                showToast(res.message);
+                await syncStudentData(false);
+            }
+        }
+
+        function startStudentScanTeacherQR() {
+            const box = document.getElementById("student-qr-scanner-box");
+            box.classList.remove("hidden");
+            stopStudentScanner();
+
+            studentQrScanner = new Html5Qrcode("student-qr-reader");
+            studentQrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 200, height: 200 } },
+                async (decodedText) => {
+                    stopStudentScanner();
+                    let token = decodedText;
+                    let pertemuanKey = "";
+                    try {
+                        const parsed = JSON.parse(decodedText);
+                        if (parsed.token) token = parsed.token;
+                        if (parsed.pertemuan) pertemuanKey = parsed.pertemuan;
+                    } catch (e) {}
+
+                    const res = await callGAS({
+                        action: "scanAbsensiQR",
+                        scanType: "student_scans_teacher",
+                        idSiswa: studentUser.id,
+                        sessionToken: token,
+                        pertemuanKey: pertemuanKey
+                    }, true, "Mencatat absensi kehadiranmu...");
+
+                    if (res.status === "ok") {
+                        showToast(res.message);
+                        await syncStudentData(false);
+                    } else {
+                        showToast(res.message, "error");
+                    }
+                },
+                () => {}
+            ).catch(err => showToast("Gagal membuka kamera: " + err, "error"));
+        }
+
+        function stopStudentScanner() {
+            const box = document.getElementById("student-qr-scanner-box");
+            if (box) box.classList.add("hidden");
+            if (studentQrScanner) {
+                studentQrScanner.stop().catch(() => {});
+                studentQrScanner = null;
+            }
+        }
+
+        // =====================================================================
+        // 13. LIGHTBOX DETAIL FOTO & TOAST
+        // =====================================================================
+        function openPhotoModal(idTugas) {
+            const t = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
+            if (!t) return;
+            document.getElementById("pm-img").src = t.Foto_URL;
+            document.getElementById("pm-badge").innerText = `Versi ${t.Versi || 1} • ${t.Status_Penilaian}`;
+            document.getElementById("pm-title").innerText = t.Judul_Tugas;
+            document.getElementById("pm-author").innerText = `${t.Nama_Siswa} • ${t.Kelas} (${t.Sekolah})`;
+            document.getElementById("pm-camera").innerText = t.Kamera || "-";
+            document.getElementById("pm-gear").innerText = t.Lensa_Alat || "-";
+            document.getElementById("pm-iso").innerText = t.ISO || "-";
+            document.getElementById("pm-shutter").innerText = t.Shutter || "-";
+            document.getElementById("pm-aperture").innerText = t.Aperture || "-";
+            document.getElementById("pm-location").innerText = t.Lokasi || "-";
+            document.getElementById("pm-desc").innerText = `"${t.Deskripsi || ''}"`;
+
+            const revBox = document.getElementById("pm-review-box");
+            if (t.Status_Penilaian === "Sudah Dinilai") {
+                revBox.innerHTML = `
+                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                        <p class="font-extrabold text-emerald-500">Nilai Karya: ${t.Nilai_Akhir_Karya} / 100</p>
+                        <p class="text-gray-300">${t.Feedback_Pengajar || 'Tidak ada catatan.'}</p>
+                    </div>
+                `;
+            } else {
+                revBox.innerHTML = `<p class="text-brand-500 font-semibold">Menunggu evaluasi dari pengajar.</p>`;
+            }
+            document.getElementById("photo-modal").classList.remove("hidden");
+        }
+
+        function closePhotoModal() { document.getElementById("photo-modal").classList.add("hidden"); }
+
+        function showToast(msg, type = "success") {
+            const c = document.getElementById("toast-container");
+            const el = document.createElement("div");
+            el.className = `px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl ${type === "success" ? "bg-brand-500" : "bg-red-600"}`;
+            el.innerText = msg;
+            c.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
+        }
+
+        window.onload = function() {
+            applyTheme();
+            if (studentUser) initStudentDashboard();
+        };
+    </script>
+</body>
+</html>
