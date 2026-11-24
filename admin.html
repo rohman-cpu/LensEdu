@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Pengajar — Rohman Capture Academy (SMKN 65 & MA Al-Hikmah)</title>
+
+    <!-- DNS Preconnect untuk Akselerasi Koneksi Server Google & CDN -->
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://script.googleusercontent.com">
+    <link rel="preconnect" href="https://lh3.googleusercontent.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -31,11 +39,11 @@
         }
     </script>
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- QR Code Generator & Scanner -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- QR Code Generator & Scanner (Defer agar tidak memblokir render awal) -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -63,7 +71,7 @@
     <!-- TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 no-print"></div>
 
-    <!-- GLOBAL SYNC LOADER OVERLAY -->
+    <!-- BLOCKING SYNC OVERLAY (HANYA UNTUK AKSI MUTASI DATA PENTING) -->
     <div id="sync-overlay" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 no-print">
         <div class="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
         <p id="sync-text" class="text-xs font-semibold text-white tracking-wide">Menyinkronkan data dengan Google Sheets...</p>
@@ -135,8 +143,8 @@
                         <i id="theme-icon" class="fa-solid fa-sun text-brand-500"></i>
                         <span id="theme-label">Light Mode</span>
                     </button>
-                    <button onclick="syncDatabase(true)" title="Refresh Data dari Google Sheets" class="py-2 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
-                        <i class="fa-solid fa-rotate text-brand-500"></i>
+                    <button onclick="syncDatabase(true, false)" title="Sinkronkan Data Terbaru" class="py-2 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
+                        <i id="manual-sync-icon" class="fa-solid fa-rotate text-brand-500"></i>
                     </button>
                 </div>
 
@@ -164,8 +172,11 @@
                     <p id="page-subtitle" class="text-xs text-slate-500 dark:text-gray-400">Kelola pembelajaran & administrasi ekskul fotografi.</p>
                 </div>
 
-                <!-- Global Filter Sekolah & Angkatan -->
+                <!-- Global Filter Sekolah & Angkatan + Background Sync Pill -->
                 <div class="flex flex-wrap items-center gap-2">
+                    <span id="bg-sync-pill" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-[10px] font-bold text-brand-500">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Sync...
+                    </span>
                     <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-obsidian px-3 py-1.5 rounded-xl border border-slate-200 dark:border-darkborder">
                         <i class="fa-solid fa-school text-brand-500 text-xs"></i>
                         <select id="global-filter-school" onchange="onGlobalFilterChange()" class="bg-transparent text-xs font-semibold text-slate-800 dark:text-white focus:outline-none">
@@ -202,7 +213,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            <!-- Left: Foto & EXIF -->
+            <!-- Left: Foto Resolusi Penuh & EXIF -->
             <div class="lg:w-7/12 bg-black flex flex-col justify-between p-4 overflow-y-auto">
                 <div class="flex-1 flex items-center justify-center min-h-[260px]">
                     <img id="gm-img" src="" alt="Karya Siswa" class="max-h-[58vh] w-auto object-contain rounded-xl">
@@ -416,15 +427,17 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT CORE LOGIC                                                 -->
+    <!-- JAVASCRIPT CORE LOGIC (OPTIMIZED: CACHE-FIRST, THUMBNAILS, OPTIMISTIC)-->
     <!-- ===================================================================== -->
     <script>
         // URL WEB APP GOOGLE APPS SCRIPT SUROHMAN
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxgxQp-wSAgzUuEuZmhiG89swgBNTyC-K3Aj5KQO2GAmUvWzve1-2smVAllLlnE0U6v9A/exec";
+        const ADMIN_CACHE_KEY = "rc_admin_db_cache_v1";
 
-        // GLOBAL STATE
+        // GLOBAL STATE (Muat cache lokal instan jika tersedia)
         let adminUser = JSON.parse(localStorage.getItem("rc_admin_user")) || null;
-        let db = {
+        let cachedDB = JSON.parse(localStorage.getItem(ADMIN_CACHE_KEY)) || null;
+        let db = cachedDB || {
             siswa: [],
             perencanaan: [],
             jurnal: [],
@@ -444,7 +457,20 @@
         let currentGradingTaskId = null;
 
         // =====================================================================
-        // 1. API CLIENT & SYNC
+        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER (HEMAT KUOTA & NGEBUT)
+        // =====================================================================
+        function optimizeDriveImg(url, width = 600) {
+            if (!url) return "";
+            const str = String(url);
+            if (str.includes("lh3.googleusercontent.com/d/")) {
+                const base = str.split("=")[0];
+                return `${base}=w${width}`;
+            }
+            return str;
+        }
+
+        // =====================================================================
+        // 1. API CLIENT & STALE-WHILE-REVALIDATE BACKGROUND SYNC
         // =====================================================================
         async function callGAS(payload, showOverlay = true, loadingText = "Menyinkronkan data...") {
             if (showOverlay) {
@@ -458,10 +484,9 @@
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
-                const json = await res.json();
-                return json;
+                return await res.json();
             } catch (err) {
-                showToast("Koneksi server terganggu: " + err.message, "error");
+                if (showOverlay) showToast("Koneksi server terganggu: " + err.message, "error");
                 return { status: "error", message: err.message };
             } finally {
                 if (showOverlay) {
@@ -471,12 +496,35 @@
             }
         }
 
-        async function syncDatabase(notify = false) {
-            const res = await callGAS({ action: "getAllData" }, true, "Memuat database ekskul dari Google Sheets...");
+        function setBackgroundSyncIndicator(active) {
+            const pill = document.getElementById("bg-sync-pill");
+            const icon = document.getElementById("manual-sync-icon");
+            if (pill) {
+                pill.classList.toggle("hidden", !active);
+                pill.classList.toggle("inline-flex", active);
+            }
+            if (icon) {
+                icon.classList.toggle("fa-spin", active);
+            }
+        }
+
+        async function syncDatabase(notify = false, silentBackground = true) {
+            setBackgroundSyncIndicator(true);
+            const useBlockingOverlay = !silentBackground && !cachedDB;
+            const res = await callGAS({ action: "getAllData" }, useBlockingOverlay, "Memuat database ekskul dari Google Sheets...");
+            setBackgroundSyncIndicator(false);
+
             if (res.status === "ok" && res.data) {
+                const prevSnapshot = JSON.stringify(db);
+                const nextSnapshot = JSON.stringify(res.data);
                 db = res.data;
+                cachedDB = res.data;
+                localStorage.setItem(ADMIN_CACHE_KEY, nextSnapshot);
+
+                if (prevSnapshot !== nextSnapshot || notify) {
+                    renderCurrentTab();
+                }
                 if (notify) showToast("Database berhasil disinkronkan!");
-                renderCurrentTab();
             }
         }
 
@@ -530,12 +578,16 @@
             document.getElementById("auth-screen").classList.remove("hidden");
         }
 
-        async function initAdminDashboard() {
+        function initAdminDashboard() {
             document.getElementById("auth-screen").classList.add("hidden");
             document.getElementById("dashboard-screen").classList.remove("hidden");
             document.getElementById("sidebar-instructor-name").innerText = adminUser.name || "Surohman";
-            await syncDatabase(false);
+
+            // 1. Render INSTAN dari cache lokal (0 ms)
             switchTab("overview");
+
+            // 2. Sinkronkan data terbaru di latar belakang tanpa memblokir layar
+            syncDatabase(false, true);
         }
 
         // =====================================================================
@@ -729,7 +781,7 @@
                             ${activeTugas.slice(0, 4).map(t => `
                                 <div class="p-3 bg-slate-50 dark:bg-obsidian rounded-xl border border-slate-200 dark:border-darkborder flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-3">
-                                        <img src="${t.Foto_URL}" class="w-12 h-12 rounded-lg object-cover border border-darkborder cursor-pointer" onclick="openGradingModal('${t.ID_Tugas}')">
+                                        <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 300)}" class="w-12 h-12 rounded-lg object-cover border border-darkborder cursor-pointer" onclick="openGradingModal('${t.ID_Tugas}')">
                                         <div>
                                             <h4 class="text-xs font-bold text-slate-900 dark:text-white">${t.Judul_Tugas} <span class="text-[10px] text-brand-500">(v${t.Versi || 1})</span></h4>
                                             <p class="text-[11px] text-gray-500">${t.Nama_Siswa} • ${t.Kelas} (${t.Sekolah})</p>
@@ -797,7 +849,7 @@
                             ${pendingList.map(s => `
                                 <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-amber-500/40 flex flex-col justify-between gap-3">
                                     <div class="flex items-center gap-3">
-                                        <img src="${s.Foto_Profil_URL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-12 h-12 rounded-xl object-cover border border-darkborder">
+                                        <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 200) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-12 h-12 rounded-xl object-cover border border-darkborder">
                                         <div>
                                             <h4 class="text-xs font-bold text-slate-900 dark:text-white">${s.Nama_Lengkap} (${s.Nama_Panggilan || '-'})</h4>
                                             <p class="text-[11px] text-brand-500 font-semibold">${s.Sekolah}</p>
@@ -845,7 +897,7 @@
                                 ${activeList.map(s => `
                                     <tr class="hover:bg-slate-50 dark:hover:bg-obsidian/60">
                                         <td class="px-3 py-3 flex items-center gap-2.5">
-                                            <img src="${s.Foto_Profil_URL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-8 h-8 rounded-lg object-cover">
+                                            <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 150) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-8 h-8 rounded-lg object-cover">
                                             <div>
                                                 <span class="font-bold text-slate-900 dark:text-white block">${s.Nama_Lengkap}</span>
                                                 <span class="text-[10px] text-gray-500">${s.Email}</span>
@@ -872,7 +924,7 @@
             const res = await callGAS({ action: "approveStudent", idSiswa, approve }, true, approve ? "Menyetujui akun siswa..." : "Menolak pendaftaran...");
             if (res.status === "ok") {
                 showToast(res.message);
-                await syncDatabase(false);
+                await syncDatabase(false, true);
             }
         }
 
@@ -882,7 +934,7 @@
             const res = await callGAS({ action: "bulkPromoteClass", sekolah: targetSchool }, true, "Memproses kenaikan kelas massal...");
             if (res.status === "ok") {
                 showToast(res.message);
-                await syncDatabase(false);
+                await syncDatabase(false, true);
             }
         }
 
@@ -891,7 +943,7 @@
             const res = await callGAS({ action: "deleteStudent", idSiswa }, true, "Menghapus data siswa...");
             if (res.status === "ok") {
                 showToast("Siswa dihapus.");
-                await syncDatabase(false);
+                await syncDatabase(false, true);
             }
         }
 
@@ -942,7 +994,7 @@
                                 <div class="bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden flex flex-col justify-between group">
                                     <div>
                                         <div class="relative h-52 bg-black overflow-hidden">
-                                            <img src="${t.Foto_URL}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-300" onclick="openGradingModal('${t.ID_Tugas}')">
+                                            <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 600)}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-300" onclick="openGradingModal('${t.ID_Tugas}')">
                                             <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white ${t.Status_Penilaian === 'Sudah Dinilai' ? 'bg-emerald-600' : 'bg-brand-500'}">
                                                 ${t.Status_Penilaian === 'Sudah Dinilai' ? 'Nilai: ' + t.Nilai_Akhir_Karya : 'Belum Dinilai'}
                                             </span>
@@ -988,7 +1040,7 @@
             currentGradingTaskId = t.ID_Tugas;
 
             const isSMK = String(t.Sekolah).toUpperCase().includes("SMK");
-            document.getElementById("gm-img").src = t.Foto_URL;
+            document.getElementById("gm-img").src = optimizeDriveImg(t.Foto_URL, 1600);
             document.getElementById("gm-camera").innerText = t.Kamera || "-";
             document.getElementById("gm-gear").innerText = t.Lensa_Alat || "-";
             document.getElementById("gm-iso").innerText = t.ISO || "-";
@@ -1002,7 +1054,6 @@
             document.getElementById("gm-title").innerText = t.Judul_Tugas;
             document.getElementById("gm-student").innerText = `${t.Nama_Siswa} • ${t.Kelas} • ${t.Sekolah}`;
 
-            // Set 4 Label Indikator Otomatis Sesuai Sekolah
             if (isSMK) {
                 document.getElementById("gm-lbl-1").innerText = "Teknis Kamera (30%)";
                 document.getElementById("gm-lbl-2").innerText = "Komposisi (25%)";
@@ -1060,27 +1111,58 @@
                 perluRevisi: document.getElementById("gm-need-revision").checked
             };
             closeGradingModal();
-            const res = await callGAS(payload, true, "Menyimpan penilaian rubrik...");
+
+            // Optimistic UI update
+            const target = db.tugas.find(x => String(x.ID_Tugas) === String(currentGradingTaskId));
+            if (target) {
+                target.Status_Penilaian = "Sudah Dinilai";
+                target.Skor_Indikator_1 = payload.indikator1;
+                target.Skor_Indikator_2 = payload.indikator2;
+                target.Skor_Indikator_3 = payload.indikator3;
+                target.Skor_Indikator_4 = payload.indikator4;
+                target.Nilai_Akhir_Karya = nilaiAkhirKarya;
+                target.Feedback_Pengajar = payload.feedback;
+                target.Perlu_Revisi = payload.perluRevisi ? "Ya" : "Tidak";
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+                renderCurrentTab();
+            }
+
+            setBackgroundSyncIndicator(true);
+            const res = await callGAS(payload, false);
+            setBackgroundSyncIndicator(false);
             if (res.status === "ok") {
-                showToast("Penilaian rubrik berhasil disimpan!");
-                await syncDatabase(false);
+                showToast("Penilaian rubrik tersimpan!");
+                syncDatabase(false, true);
             }
         }
 
         async function toggleHallOfFrameAction(idTugas) {
-            const res = await callGAS({ action: "toggleHallOfFrame", id: idTugas }, true, "Memperbarui Hall of Frame...");
-            if (res.status === "ok") {
-                showToast(res.value === "TRUE" ? "Karya disematkan ke Hall of Frame!" : "Karya dilepas dari Hall of Frame.");
-                await syncDatabase(false);
+            // Optimistic UI update
+            const target = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
+            if (target) {
+                const next = String(target.Hall_Of_Frame).toUpperCase() === "TRUE" ? "FALSE" : "TRUE";
+                target.Hall_Of_Frame = next;
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+                renderCurrentTab();
+                showToast(next === "TRUE" ? "Karya disematkan ke Hall of Frame!" : "Karya dilepas dari Hall of Frame.");
             }
+            setBackgroundSyncIndicator(true);
+            await callGAS({ action: "toggleHallOfFrame", id: idTugas }, false);
+            setBackgroundSyncIndicator(false);
         }
 
         async function toggleArchiveAction(idTugas) {
-            const res = await callGAS({ action: "toggleArchiveTugas", id: idTugas }, true, "Memindahkan status arsip...");
-            if (res.status === "ok") {
+            // Optimistic UI update
+            const target = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
+            if (target) {
+                target.Archived = String(target.Archived).toUpperCase() === "TRUE" ? "FALSE" : "TRUE";
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+                renderCurrentTab();
                 showToast("Status arsip diperbarui!");
-                await syncDatabase(false);
             }
+            setBackgroundSyncIndicator(true);
+            await callGAS({ action: "toggleArchiveTugas", id: idTugas }, false);
+            setBackgroundSyncIndicator(false);
         }
 
         // =====================================================================
@@ -1123,7 +1205,6 @@
                         </div>
                     </div>
 
-                    <!-- Area Interaktif Berdasarkan Mode Terpilih -->
                     ${qrMode === 'teacher_scans_student' ? `
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                             <div class="space-y-3">
@@ -1170,7 +1251,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Matriks Presensi Pertemuan</h3>
-                            <p class="text-xs text-gray-500">Klik sel untuk mengubah manual: <strong>-</strong> / <strong class="text-emerald-500">H</strong> / <strong class="text-sky-500">I</strong> / <strong class="text-amber-500">S</strong> / <strong class="text-red-500">A</strong></p>
+                            <p class="text-xs text-gray-500">Klik sel untuk mengubah instan: <strong>-</strong> / <strong class="text-emerald-500">H</strong> / <strong class="text-sky-500">I</strong> / <strong class="text-amber-500">S</strong> / <strong class="text-red-500">A</strong></p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="manageMeetingCol('add')" class="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl">+ Kolom Pertemuan</button>
@@ -1229,7 +1310,10 @@
             const pertemuan = document.getElementById("qr-target-pertemuan")?.value || "P1";
             db.settings.qrMode = newMode;
             db.settings.activeSessionPertemuan = pertemuan;
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
             renderCurrentTab();
+
+            setBackgroundSyncIndicator(true);
             await callGAS({
                 action: "setQRSessionConfig",
                 qrMode: newMode,
@@ -1237,6 +1321,7 @@
                 activeSessionToken: db.settings.activeSessionToken || "",
                 activeSessionExpiry: db.settings.activeSessionExpiry || ""
             }, false);
+            setBackgroundSyncIndicator(false);
         }
 
         async function generateSessionQRForStudents() {
@@ -1258,6 +1343,7 @@
                 db.settings.activeSessionToken = token;
                 db.settings.activeSessionPertemuan = pertemuan;
                 db.settings.activeSessionExpiry = expiry;
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
                 showToast("QR Sesi aktif selama 30 menit!");
                 renderCurrentTab();
             }
@@ -1265,7 +1351,7 @@
 
         function renderSessionQRCanvas(token, pertemuan) {
             const box = document.getElementById("session-qr-canvas");
-            if (!box) return;
+            if (!box || typeof QRCode === "undefined") return;
             box.innerHTML = "";
             const qrPayload = JSON.stringify({ type: "RC_SESSION_QR", token: token, pertemuan: pertemuan });
             new QRCode(box, { text: qrPayload, width: 180, height: 180 });
@@ -1295,7 +1381,7 @@
 
                     if (res.status === "ok") {
                         showToast(res.message);
-                        await syncDatabase(false);
+                        await syncDatabase(false, true);
                     } else {
                         showToast(res.message, "error");
                     }
@@ -1315,15 +1401,21 @@
             const states = ["-", "H", "I", "S", "A"];
             const nextVal = states[(states.indexOf(currentVal) + 1) % states.length];
             const row = db.presensi.find(r => String(r.ID_Siswa) === String(idSiswa));
-            if (row) row[pertemuanKey] = nextVal;
+            if (row) {
+                row[pertemuanKey] = nextVal;
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            }
             renderCurrentTab();
+
+            setBackgroundSyncIndicator(true);
             await callGAS({ action: "updatePresensiCell", idSiswa, pertemuanKey, status: nextVal }, false);
+            setBackgroundSyncIndicator(false);
         }
 
         async function manageMeetingCol(mode) {
             if (mode === "remove" && !confirm("Hapus kolom pertemuan terakhir?")) return;
             const res = await callGAS({ action: "managePertemuanColumn", mode }, true, "Memperbarui kolom pertemuan...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         // =====================================================================
@@ -1450,13 +1542,13 @@
             };
             closeRencanaModal();
             const res = await callGAS({ action: "saveRencana", item }, true, "Menyimpan rencana sesi...");
-            if (res.status === "ok") { showToast("Rencana sesi tersimpan!"); await syncDatabase(false); }
+            if (res.status === "ok") { showToast("Rencana sesi tersimpan!"); await syncDatabase(false, true); }
         }
 
         async function deleteRencanaAction(id) {
             if (!confirm("Hapus rencana sesi ini?")) return;
             const res = await callGAS({ action: "deleteRencana", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         // =====================================================================
@@ -1537,13 +1629,13 @@
             };
             closeJurnalModal();
             const res = await callGAS({ action: "saveJurnal", item }, true, "Menyimpan jurnal...");
-            if (res.status === "ok") { showToast("Jurnal berhasil disimpan!"); await syncDatabase(false); }
+            if (res.status === "ok") { showToast("Jurnal berhasil disimpan!"); await syncDatabase(false, true); }
         }
 
         async function deleteJurnalAction(id) {
             if (!confirm("Hapus jurnal ini?")) return;
             const res = await callGAS({ action: "deleteJurnal", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         // =====================================================================
@@ -1661,13 +1753,13 @@
             };
             tempCoverBase64 = ""; tempPdfBase64 = "";
             const res = await callGAS({ action: "saveMateri", materi }, true, "Mengunggah materi ke Google Drive...");
-            if (res.status === "ok") { showToast(res.message); await syncDatabase(false); }
+            if (res.status === "ok") { showToast(res.message); await syncDatabase(false, true); }
         }
 
         async function deleteMateriAction(id) {
             if (!confirm("Hapus materi ini?")) return;
             const res = await callGAS({ action: "deleteMateri", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         // =====================================================================
@@ -1683,7 +1775,6 @@
             });
             const nilaiPresensi = valid > 0 ? Math.round((hadir / valid) * 100) : 0;
 
-            // Ambil rata-rata nilai karya terbaru siswa yang sudah dinilai
             const gradedTasks = db.tugas.filter(t => String(t.ID_Siswa) === String(siswaObj.ID_Siswa) && t.Status_Penilaian === "Sudah Dinilai");
             const nilaiKarya = gradedTasks.length > 0
                 ? gradedTasks.reduce((acc, cur) => acc + Number(cur.Nilai_Akhir_Karya || 0), 0) / gradedTasks.length
@@ -1955,7 +2046,7 @@
                 tglCetak: document.getElementById("set-tgl").value
             };
             const res = await callGAS({ action: "saveSettings", settings: updates }, true, "Menyimpan kop surat...");
-            if (res.status === "ok") { showToast(res.message); await syncDatabase(false); }
+            if (res.status === "ok") { showToast(res.message); await syncDatabase(false, true); }
         }
 
         async function addMasterItem(key, inputId) {
@@ -1964,14 +2055,14 @@
             const list = JSON.parse(db.settings[key] || "[]");
             list.push(val);
             const res = await callGAS({ action: "saveSettings", settings: { [key]: list } }, true, "Menambahkan item...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         async function removeMasterItem(key, idx) {
             const list = JSON.parse(db.settings[key] || "[]");
             list.splice(idx, 1);
             const res = await callGAS({ action: "saveSettings", settings: { [key]: list } }, true, "Menghapus item...");
-            if (res.status === "ok") await syncDatabase(true);
+            if (res.status === "ok") await syncDatabase(true, true);
         }
 
         function showToast(msg, type = "success") {
@@ -1983,10 +2074,10 @@
             setTimeout(() => el.remove(), 3000);
         }
 
-        window.onload = function() {
+        window.addEventListener("DOMContentLoaded", function() {
             applyTheme();
             if (adminUser) initAdminDashboard();
-        };
+        });
     </script>
 </body>
 </html>
