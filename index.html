@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Siswa — Rohman Capture Academy</title>
+
+    <!-- DNS Preconnect untuk Akselerasi Koneksi Server Google & CDN -->
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://script.googleusercontent.com">
+    <link rel="preconnect" href="https://lh3.googleusercontent.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -31,13 +39,13 @@
         }
     </script>
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- EXIF Reader, QR Code Generator & Scanner, HTML2PDF -->
-    <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Libraries (Defer agar rendering HTML awal tidak terblokir) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -67,13 +75,13 @@
     <!-- TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
 
-    <!-- GLOBAL SYNC LOADER -->
+    <!-- BLOCKING OVERLAY (HANYA UNTUK LOGIN, REGISTER & UPLOAD FOTO) -->
     <div id="sync-overlay" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 p-4">
         <div class="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
         <p id="sync-text" class="text-xs font-bold text-white text-center tracking-wide">Memproses permintaan...</p>
         <div id="batch-progress-box" class="hidden w-full max-w-xs space-y-1.5 mt-2">
             <div class="w-full bg-darkcard rounded-full h-2.5 overflow-hidden border border-darkborder">
-                <div id="batch-progress-bar" class="bg-brand-500 h-2.5 transition-all duration-300" style="width: 0%"></div>
+                <div id="batch-progress-bar" class="bg-brand-500 h-2.5 transition-all duration-200" style="width: 0%"></div>
             </div>
             <p id="batch-progress-label" class="text-[11px] text-center text-gray-300">0 / 0 foto</p>
         </div>
@@ -219,8 +227,8 @@
                         <i id="theme-icon" class="fa-solid fa-sun text-brand-500"></i>
                         <span id="theme-label">Light Mode</span>
                     </button>
-                    <button onclick="syncStudentData(true)" title="Refresh Data" class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
-                        <i class="fa-solid fa-rotate text-brand-500"></i>
+                    <button onclick="syncStudentData(true, false)" title="Sinkronkan Data Terbaru" class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
+                        <i id="manual-sync-icon" class="fa-solid fa-rotate text-brand-500"></i>
                     </button>
                 </div>
 
@@ -237,15 +245,21 @@
 
         <!-- MAIN WORKSPACE -->
         <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
-            <header class="p-4 md:px-8 border-b border-slate-200 dark:border-darkborder bg-white/80 dark:bg-darkcard/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
+            <header class="p-4 md:px-8 border-b border-slate-200 dark:border-darkborder bg-white/80 dark:bg-darkcard/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center gap-2">
                 <div>
                     <h1 id="page-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Dashboard Siswa</h1>
                     <p id="page-subtitle" class="text-xs text-gray-500">Menciptakan Kebahagiaan lewat Karya Visual.</p>
                 </div>
-                <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="header-school-badge">Anggota Aktif</span>
-                </span>
+                <div class="flex items-center gap-2">
+                    <!-- Subtle Background Sync Indicator (Non-Blocking) -->
+                    <span id="bg-sync-pill" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-[10px] font-bold text-brand-500">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Menyinkronkan...
+                    </span>
+                    <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="header-school-badge">Anggota Aktif</span>
+                    </span>
+                </div>
             </header>
 
             <div id="content-area" class="p-4 md:p-8 space-y-6 flex-1"></div>
@@ -253,7 +267,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- MODALS (LIGHTBOX DETAIL FOTO, PDF READER, ALBUM A4 & SERTIFIKAT A4)   -->
+    <!-- MODALS (LIGHTBOX DETAIL FOTO, ALBUM A4 & SERTIFIKAT A4)               -->
     <!-- ===================================================================== -->
 
     <!-- MODAL DETAIL FOTO & RIWAYAT VERSI -->
@@ -310,15 +324,18 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT CORE LOGIC                                                 -->
+    <!-- JAVASCRIPT CORE LOGIC (OPTIMIZED: CACHE-FIRST, THUMBNAILS, PARALLEL)  -->
     <!-- ===================================================================== -->
     <script>
         // URL WEB APP GOOGLE APPS SCRIPT SUROHMAN
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxgxQp-wSAgzUuEuZmhiG89swgBNTyC-K3Aj5KQO2GAmUvWzve1-2smVAllLlnE0U6v9A/exec";
+        const CACHE_STORAGE_KEY = "rc_student_db_cache_v1";
 
-        // STATE
+        // STATE (Muat cache lokal instan jika tersedia)
         let studentUser = JSON.parse(localStorage.getItem("rc_student_user")) || null;
-        let db = { siswa: [], perencanaan: [], jurnal: [], presensi: [], tugas: [], materi: [], settings: {} };
+        let cachedDB = JSON.parse(localStorage.getItem(CACHE_STORAGE_KEY)) || null;
+        let db = cachedDB || { siswa: [], perencanaan: [], jurnal: [], presensi: [], tugas: [], materi: [], settings: {} };
+
         let activeTab = "overview";
         let regProfileBase64 = "";
         let studentQrScanner = null;
@@ -329,9 +346,22 @@
 
         // Portfolio Builder State
         let selectedPortfolioIds = new Set();
-        let portfolioTemplate = "editorial"; // 'editorial' | 'grid' | 'dark'
+        let portfolioTemplate = "editorial";
         let currentA4Orientation = "portrait";
         let currentA4Filename = "Dokumen_A4.pdf";
+
+        // =====================================================================
+        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER (HEMAT KUOTA & NGEBUT)
+        // =====================================================================
+        function optimizeDriveImg(url, width = 600) {
+            if (!url) return "";
+            const str = String(url);
+            if (str.includes("lh3.googleusercontent.com/d/")) {
+                const base = str.split("=")[0];
+                return `${base}=w${width}`;
+            }
+            return str;
+        }
 
         // =====================================================================
         // 1. IMAGE COMPRESSION (TAJAM NAMUN RINGAN) & AUTO-EXIF READER
@@ -393,7 +423,7 @@
         }
 
         // =====================================================================
-        // 2. API CLIENT & SYNC
+        // 2. API CLIENT & STALE-WHILE-REVALIDATE BACKGROUND SYNC
         // =====================================================================
         async function callGAS(payload, showOverlay = true, text = "Menyinkronkan data...") {
             if (showOverlay) {
@@ -410,7 +440,7 @@
                 });
                 return await res.json();
             } catch (err) {
-                showToast("Gangguan jaringan: " + err.message, "error");
+                if (showOverlay) showToast("Gangguan jaringan: " + err.message, "error");
                 return { status: "error", message: err.message };
             } finally {
                 if (showOverlay) {
@@ -420,11 +450,33 @@
             }
         }
 
-        async function syncStudentData(notify = false) {
-            const res = await callGAS({ action: "getAllData" }, true, "Memuat data terbaru dari server...");
+        function setBackgroundSyncIndicator(active) {
+            const pill = document.getElementById("bg-sync-pill");
+            const icon = document.getElementById("manual-sync-icon");
+            if (pill) {
+                pill.classList.toggle("hidden", !active);
+                pill.classList.toggle("inline-flex", active);
+            }
+            if (icon) {
+                icon.classList.toggle("fa-spin", active);
+            }
+        }
+
+        async function syncStudentData(notify = false, silentBackground = true) {
+            setBackgroundSyncIndicator(true);
+            // Jika belum pernah ada cache sama sekali, tampilkan overlay ringan sekali saja
+            const useBlockingOverlay = !silentBackground && !cachedDB;
+            const res = await callGAS({ action: "getAllData" }, useBlockingOverlay, "Memuat data ekskul pertama kali...");
+            setBackgroundSyncIndicator(false);
+
             if (res.status === "ok" && res.data) {
+                const prevSnapshot = JSON.stringify(db);
+                const nextSnapshot = JSON.stringify(res.data);
                 db = res.data;
-                // Sinkronkan profil terbaru user dari sheet Siswa
+                cachedDB = res.data;
+                localStorage.setItem(CACHE_STORAGE_KEY, nextSnapshot);
+
+                // Sinkronkan profil terbaru user
                 const freshMe = db.siswa.find(s => String(s.ID_Siswa) === String(studentUser.id));
                 if (freshMe) {
                     studentUser.name = freshMe.Nama_Lengkap;
@@ -436,8 +488,12 @@
                     localStorage.setItem("rc_student_user", JSON.stringify(studentUser));
                     updateSidebarProfileUI();
                 }
-                if (notify) showToast("Data berhasil diperbarui!");
-                renderCurrentTab();
+
+                // Render ulang hanya jika ada data baru atau diminta user
+                if (prevSnapshot !== nextSnapshot || notify) {
+                    renderCurrentTab();
+                }
+                if (notify) showToast("Data terbaru berhasil dimuat!");
             }
         }
 
@@ -535,21 +591,26 @@
 
         function updateSidebarProfileUI() {
             const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=ff6b00&color=fff";
-            document.getElementById("sb-avatar").src = studentUser.photoUrl || fallbackAvatar;
+            document.getElementById("sb-avatar").src = optimizeDriveImg(studentUser.photoUrl, 200) || fallbackAvatar;
             document.getElementById("sb-name").innerText = studentUser.name;
             document.getElementById("sb-class").innerText = `${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}`;
             document.getElementById("sb-school").innerText = studentUser.school;
             document.getElementById("header-school-badge").innerText = studentUser.school;
         }
 
-        async function initStudentDashboard() {
+        function initStudentDashboard() {
             document.getElementById("auth-screen").classList.add("hidden");
             document.getElementById("dashboard-screen").classList.remove("hidden");
             updateSidebarProfileUI();
-            await syncStudentData(false);
-            // Default pilih semua karya masuk ke portfolio builder
+
+            // 1. Render INSTAN dari cache (0 ms)
             getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
             switchTab("overview");
+
+            // 2. Sinkronkan data terbaru di latar belakang tanpa memblokir layar
+            syncStudentData(false, true).then(() => {
+                getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
+            });
         }
 
         // =====================================================================
@@ -705,7 +766,7 @@
                         ${mySubs.map(t => `
                             <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="flex items-center gap-3">
-                                    <img src="${t.Foto_URL}" class="w-14 h-14 rounded-xl object-cover cursor-pointer border border-darkborder" onclick="openPhotoModal('${t.ID_Tugas}')">
+                                    <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 300)}" class="w-14 h-14 rounded-xl object-cover cursor-pointer border border-darkborder" onclick="openPhotoModal('${t.ID_Tugas}')">
                                     <div>
                                         <div class="flex items-center gap-2 flex-wrap">
                                             <h4 class="text-xs font-extrabold text-slate-900 dark:text-white">${t.Judul_Tugas}</h4>
@@ -781,7 +842,7 @@
                         sel.value = missionTitle;
                     }
                 }
-            }, 50);
+            }, 30);
         }
 
         function renderStudentMateri(container) {
@@ -799,12 +860,12 @@
                                 <p class="text-xs text-gray-400 leading-relaxed">${m.Rangkuman}</p>
                                 ${!isPdf && m.Video_URL ? `
                                     <div class="aspect-video rounded-xl overflow-hidden bg-black border border-darkborder">
-                                        <iframe class="w-full h-full" src="${m.Video_URL}" frameborder="0" allowfullscreen></iframe>
+                                        <iframe loading="lazy" class="w-full h-full" src="${m.Video_URL}" frameborder="0" allowfullscreen></iframe>
                                     </div>
                                 ` : ''}
                                 ${isPdf ? `
                                     <div class="flex items-center gap-4 pt-2">
-                                        ${m.Cover_URL ? `<img src="${m.Cover_URL}" class="w-20 aspect-a4 rounded-lg object-cover border border-darkborder">` : ''}
+                                        ${m.Cover_URL ? `<img loading="lazy" src="${optimizeDriveImg(m.Cover_URL, 400)}" class="w-20 aspect-a4 rounded-lg object-cover border border-darkborder">` : ''}
                                         <div class="space-y-2">
                                             <p class="text-xs text-gray-500">${m.Jumlah_Halaman || 10} Halaman (Format A4)</p>
                                             ${m.File_PDF_URL ? `<a href="${m.File_PDF_URL}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-file-pdf"></i> Buka / Unduh PDF</a>` : ''}
@@ -819,7 +880,7 @@
         }
 
         // =====================================================================
-        // 7. KIRIM TUGAS FOTO BATCH (HINGGA RATUSAN FOTO + AUTO-EXIF + REVISI)
+        // 7. KIRIM TUGAS FOTO BATCH (PARALLEL 3X + AUTO-EXIF + REVISI)
         // =====================================================================
         function startRevisionUpload(idTugas) {
             const target = getMySubmissions().find(t => String(t.ID_Tugas) === String(idTugas));
@@ -869,16 +930,16 @@
 
                         <!-- Dropzone Multi-File (Ratusan Foto Sekaligus) -->
                         <div>
-                            <label class="block font-bold mb-1">Pilih Foto (Bisa Pilih 1 hingga Ratusan Foto Sekaligus — Auto-EXIF & Kompresi Tajam)</label>
+                            <label class="block font-bold mb-1">Pilih Foto (Bisa Pilih 1 hingga Ratusan Foto Sekaligus — Auto-EXIF & Parallel Upload)</label>
                             <div class="border-2 border-dashed border-slate-300 dark:border-darkborder hover:border-brand-500 rounded-2xl p-6 text-center relative cursor-pointer transition">
                                 <input type="file" id="up-multi-files" accept="image/*" multiple onchange="handleMultiFileSelection(event)" class="absolute inset-0 opacity-0 cursor-pointer">
                                 <i class="fa-solid fa-images text-3xl text-brand-500 mb-2"></i>
                                 <p class="font-bold text-slate-900 dark:text-white">Klik atau Seret Banyak Foto ke Sini</p>
-                                <p class="text-[11px] text-gray-500 mt-1">Sistem otomatis membaca data Kamera, ISO, Shutter & Aperture dari setiap file JPG asli.</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Otomatis membaca Kamera, ISO, Shutter & Aperture + unggah cepat 3 foto paralel sekaligus.</p>
                             </div>
                         </div>
 
-                        <!-- Default Metadata (Digunakan jika EXIF kosong / foto dari WhatsApp) -->
+                        <!-- Default Metadata -->
                         <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-3">
                             <p class="font-bold text-brand-500">Data Default (Otomatis terisi jika EXIF terbaca, bisa diedit manual):</p>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -934,10 +995,10 @@
             const previewBox = document.getElementById("batch-queue-preview");
             previewBox.innerHTML = `<p class="text-xs font-bold text-brand-500"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Membaca EXIF & menyiapkan ${files.length} foto...</p>`;
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            // Baca EXIF secara paralel agar super cepat meski ratusan file
+            const parsedList = await Promise.all(files.map(async (file) => {
                 const exif = await extractExifMetadata(file);
-                uploadQueueItems.push({
+                return {
                     file: file,
                     name: file.name,
                     camera: exif.camera || "",
@@ -945,10 +1006,10 @@
                     iso: exif.iso || "",
                     shutter: exif.shutter || "",
                     aperture: exif.aperture || ""
-                });
-            }
+                };
+            }));
+            uploadQueueItems = parsedList;
 
-            // Jika foto pertama punya EXIF, otomatis isi kolom default agar praktis
             if (uploadQueueItems[0].camera && !document.getElementById("up-def-camera").value) {
                 document.getElementById("up-def-camera").value = uploadQueueItems[0].camera;
             }
@@ -965,7 +1026,7 @@
             previewBox.innerHTML = `
                 <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex justify-between items-center">
                     <span class="font-bold text-emerald-500"><i class="fa-solid fa-check-circle mr-1"></i> ${uploadQueueItems.length} Foto Siap Diunggah</span>
-                    <span class="text-[11px] text-gray-400">Kompresi pintar aktif (Maks 1920px, tajam & ringan)</span>
+                    <span class="text-[11px] text-gray-400">Parallel Upload 3x + Kompresi Tajam</span>
                 </div>
                 <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                     ${uploadQueueItems.map((item, idx) => `
@@ -1002,7 +1063,6 @@
             const batchId = revisionTargetTask ? revisionTargetTask.Group_Batch_ID : ("BATCH-" + Date.now());
             const versi = revisionTargetTask ? (Number(revisionTargetTask.Versi || 1) + 1) : 1;
 
-            // Tampilkan Overlay Progress Sequential Queue (Anti-Timeout untuk ratusan foto)
             const overlay = document.getElementById("sync-overlay");
             const progBox = document.getElementById("batch-progress-box");
             const progBar = document.getElementById("batch-progress-bar");
@@ -1012,37 +1072,44 @@
             overlay.classList.add("flex");
             progBox.classList.remove("hidden");
 
+            const total = uploadQueueItems.length;
+            let completed = 0;
             let successCount = 0;
-            for (let i = 0; i < uploadQueueItems.length; i++) {
-                const item = uploadQueueItems[i];
-                const pct = Math.round(((i + 1) / uploadQueueItems.length) * 100);
-                document.getElementById("sync-text").innerText = `Mengompres & mengunggah foto ke-${i + 1} dari ${uploadQueueItems.length}...`;
-                progBar.style.width = `${pct}%`;
-                progLbl.innerText = `${i + 1} / ${uploadQueueItems.length} foto (${pct}%)`;
+            const CONCURRENCY = 3; // Kirim 3 foto paralel bersamaan untuk pangkas waktu 3x lipat
 
-                const compressedBase64 = await compressImageFile(item.file, 1920, 0.85);
-                const res = await callGAS({
-                    action: "submitPhotoItem",
-                    groupBatchId: batchId,
-                    versi: versi,
-                    idSiswa: studentUser.id,
-                    emailSiswa: studentUser.email,
-                    namaSiswa: studentUser.name,
-                    sekolah: studentUser.school,
-                    kelas: studentUser.className,
-                    judulTugas: judulTugas,
-                    photoBase64: compressedBase64,
-                    kamera: item.camera || defCam,
-                    lensaAlat: item.lens || defGear,
-                    lokasi: defLoc,
-                    iso: item.iso || defIso,
-                    shutter: item.shutter || defShutter,
-                    aperture: item.aperture || defAperture,
-                    deskripsi: defDesc,
-                    tanggalKirim: tglKirim
-                }, false);
+            for (let i = 0; i < total; i += CONCURRENCY) {
+                const chunk = uploadQueueItems.slice(i, i + CONCURRENCY);
+                document.getElementById("sync-text").innerText = `Mengunggah paralel (${Math.min(i + CONCURRENCY, total)} dari ${total} foto)...`;
 
-                if (res.status === "ok") successCount++;
+                await Promise.all(chunk.map(async (item) => {
+                    const compressedBase64 = await compressImageFile(item.file, 1920, 0.85);
+                    const res = await callGAS({
+                        action: "submitPhotoItem",
+                        groupBatchId: batchId,
+                        versi: versi,
+                        idSiswa: studentUser.id,
+                        emailSiswa: studentUser.email,
+                        namaSiswa: studentUser.name,
+                        sekolah: studentUser.school,
+                        kelas: studentUser.className,
+                        judulTugas: judulTugas,
+                        photoBase64: compressedBase64,
+                        kamera: item.camera || defCam,
+                        lensaAlat: item.lens || defGear,
+                        lokasi: defLoc,
+                        iso: item.iso || defIso,
+                        shutter: item.shutter || defShutter,
+                        aperture: item.aperture || defAperture,
+                        deskripsi: defDesc,
+                        tanggalKirim: tglKirim
+                    }, false);
+
+                    completed++;
+                    if (res.status === "ok") successCount++;
+                    const pct = Math.round((completed / total) * 100);
+                    progBar.style.width = `${pct}%`;
+                    progLbl.innerText = `${completed} / ${total} foto (${pct}%)`;
+                }));
             }
 
             overlay.classList.add("hidden");
@@ -1052,7 +1119,7 @@
             uploadQueueItems = [];
             revisionTargetTask = null;
             showToast(`${successCount} foto berhasil diunggah ke sistem!`);
-            await syncStudentData(false);
+            await syncStudentData(false, true);
             getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
             switchTab("overview");
         }
@@ -1083,7 +1150,7 @@
                     ${featured.map(t => `
                         <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden group">
                             <div class="relative h-60 bg-black overflow-hidden">
-                                <img src="${t.Foto_URL}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" onclick="openPhotoModal('${t.ID_Tugas}')">
+                                <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 600)}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" onclick="openPhotoModal('${t.ID_Tugas}')">
                                 <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-extrabold shadow">
                                     <i class="fa-solid fa-star mr-1"></i> Karya Pilihan
                                 </span>
@@ -1195,7 +1262,6 @@
             document.getElementById("lbl-sim-ap").innerText = `f/${ap.toFixed(1)}`;
             document.getElementById("lbl-sim-sh").innerText = `1/${sh}s`;
 
-            // Hitung kecerahan relatif terhadap baseline (ISO 400, f/2.8, 1/250s)
             const brightness = Math.min(2.2, Math.max(0.25, (iso / 400) * (2.8 / ap) * (250 / sh)));
             const blurPx = ap <= 2.2 ? 2.5 : (ap <= 5.6 ? 0.8 : 0);
             const img = document.getElementById("sim-preview-img");
@@ -1210,8 +1276,8 @@
         function calcDoF() {
             const f = Number(document.getElementById("dof-focal").value || 50);
             const N = Number(document.getElementById("dof-ap").value || 1.8);
-            const d = Number(document.getElementById("dof-dist").value || 2) * 1000; // mm
-            const coc = 0.02; // APS-C circle of confusion
+            const d = Number(document.getElementById("dof-dist").value || 2) * 1000;
+            const coc = 0.02;
             const H = (f * f) / (N * coc) + f;
             const near = (d * (H - f)) / (H + d - 2 * f);
             const far = d >= H ? Infinity : (d * (H - f)) / (H - d);
@@ -1259,7 +1325,7 @@
                             return `
                                 <div onclick="togglePortfolioSelection('${t.ID_Tugas}')" class="cursor-pointer rounded-2xl border-2 overflow-hidden transition ${checked ? 'border-brand-500 bg-brand-500/5' : 'border-slate-200 dark:border-darkborder opacity-60'}">
                                     <div class="relative h-44 bg-black">
-                                        <img src="${t.Foto_URL}" class="w-full h-full object-cover">
+                                        <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 500)}" class="w-full h-full object-cover">
                                         <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center ${checked ? 'bg-brand-500 text-white' : 'bg-black/60 text-gray-400'}">
                                             <i class="fa-solid fa-check text-xs"></i>
                                         </div>
@@ -1321,7 +1387,7 @@
                         ${chosen.map((t, idx) => `
                             <div style="border: 1px solid ${borderHex}; background: ${cardBg}; border-radius: 10px; padding: 12px; page-break-inside: avoid; display: flex; flex-direction: ${isGridTpl ? 'column' : 'row'}; gap: 14px;">
                                 <div style="width: ${isGridTpl ? '100%' : '46%'}; height: ${isGridTpl ? '170px' : '195px'}; background: #000; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
-                                    <img src="${t.Foto_URL}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="${optimizeDriveImg(t.Foto_URL, 1400)}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                     <div>
@@ -1482,7 +1548,7 @@
                             </div>
 
                             <div class="flex items-center gap-4">
-                                <img src="${studentUser.photoUrl || fallbackAvatar}" class="w-16 h-16 rounded-2xl object-cover border-2 border-brand-500">
+                                <img src="${optimizeDriveImg(studentUser.photoUrl, 300) || fallbackAvatar}" class="w-16 h-16 rounded-2xl object-cover border-2 border-brand-500">
                                 <div>
                                     <h3 class="text-base font-extrabold leading-tight">${studentUser.name}</h3>
                                     <p class="text-xs text-brand-500 font-bold">${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}</p>
@@ -1564,9 +1630,8 @@
                 </div>
             `;
 
-            // Render QR Kartu Anggota Siswa
             const qrTarget = document.getElementById("student-member-qr");
-            if (qrTarget) {
+            if (qrTarget && typeof QRCode !== "undefined") {
                 qrTarget.innerHTML = "";
                 new QRCode(qrTarget, {
                     text: JSON.stringify({ idSiswa: studentUser.id, nama: studentUser.name }),
@@ -1598,7 +1663,7 @@
             const res = await callGAS(payload, true, "Memperbarui profil siswa...");
             if (res.status === "ok") {
                 showToast(res.message);
-                await syncStudentData(false);
+                await syncStudentData(false, true);
             }
         }
 
@@ -1631,7 +1696,7 @@
 
                     if (res.status === "ok") {
                         showToast(res.message);
-                        await syncStudentData(false);
+                        await syncStudentData(false, true);
                     } else {
                         showToast(res.message, "error");
                     }
@@ -1655,7 +1720,7 @@
         function openPhotoModal(idTugas) {
             const t = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
             if (!t) return;
-            document.getElementById("pm-img").src = t.Foto_URL;
+            document.getElementById("pm-img").src = optimizeDriveImg(t.Foto_URL, 1600);
             document.getElementById("pm-badge").innerText = `Versi ${t.Versi || 1} • ${t.Status_Penilaian}`;
             document.getElementById("pm-title").innerText = t.Judul_Tugas;
             document.getElementById("pm-author").innerText = `${t.Nama_Siswa} • ${t.Kelas} (${t.Sekolah})`;
@@ -1692,10 +1757,10 @@
             setTimeout(() => el.remove(), 3200);
         }
 
-        window.onload = function() {
+        window.addEventListener("DOMContentLoaded", function() {
             applyTheme();
             if (studentUser) initStudentDashboard();
-        };
+        });
     </script>
 </body>
 </html>
