@@ -21,11 +21,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#ff6b00',
-                            600: '#ea580c',
-                            700: '#c2410c',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         },
                         obsidian: '#010101',
                         darkcard: '#111111',
@@ -41,18 +42,18 @@
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Libraries (Defer agar rendering HTML awal tidak terblokir) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- EXIF Full Reader (Sinkron agar langsung siap baca EXIF kamera/HP), QR & HTML2PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #ff6b00; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
         .aspect-a4 { aspect-ratio: 1 / 1.414; }
         .a4-sheet {
             width: 210mm;
@@ -68,6 +69,15 @@
             box-sizing: border-box;
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
+        .btn-smooth {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-smooth:active {
+            transform: scale(0.97);
+        }
+        /* Hide scrollbar for compact mobile nav */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-obsidian text-slate-800 dark:text-gray-200 min-h-screen flex flex-col">
@@ -81,7 +91,7 @@
         <p id="sync-text" class="text-xs font-bold text-white text-center tracking-wide">Memproses permintaan...</p>
         <div id="batch-progress-box" class="hidden w-full max-w-xs space-y-1.5 mt-2">
             <div class="w-full bg-darkcard rounded-full h-2.5 overflow-hidden border border-darkborder">
-                <div id="batch-progress-bar" class="bg-brand-500 h-2.5 transition-all duration-200" style="width: 0%"></div>
+                <div id="batch-progress-bar" class="bg-brand-600 h-2.5 transition-all duration-200" style="width: 0%"></div>
             </div>
             <p id="batch-progress-label" class="text-[11px] text-center text-gray-300">0 / 0 foto</p>
         </div>
@@ -91,23 +101,23 @@
     <!-- 1. AUTH SCREEN (LOGIN & REGISTRASI SISWA BARU)                        -->
     <!-- ===================================================================== -->
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-obsidian relative overflow-hidden">
-        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="w-full max-w-md bg-darkcard border border-darkborder p-7 sm:p-8 rounded-2xl shadow-2xl relative z-10">
             <div class="text-center mb-6">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-500/10 text-brand-500 rounded-2xl mb-3 border border-brand-500/30">
                     <i class="fa-solid fa-camera-retro text-3xl"></i>
                 </div>
-                <span class="block text-[10px] font-bold tracking-[0.2em] text-brand-500 uppercase">PORTAL ANGGOTA EKSKUL</span>
+                <span class="block text-[10px] font-bold tracking-[0.2em] text-brand-400 uppercase">PORTAL ANGGOTA EKSKUL</span>
                 <h1 class="text-2xl font-extrabold text-white mt-1">Rohman Capture Academy</h1>
                 <p class="text-xs text-gray-400 mt-1">SMK Negeri 65 Jakarta & MA Al-Hikmah Jakarta</p>
             </div>
 
             <!-- Switcher Login / Daftar -->
             <div class="grid grid-cols-2 gap-1 p-1 bg-obsidian rounded-xl border border-darkborder mb-5 text-xs font-bold">
-                <button id="tab-login-btn" onclick="switchAuthTab('login')" class="py-2 rounded-lg bg-brand-500 text-white transition">Masuk Akun</button>
-                <button id="tab-reg-btn" onclick="switchAuthTab('register')" class="py-2 rounded-lg text-gray-400 hover:text-white transition">Daftar Anggota Baru</button>
+                <button id="tab-login-btn" onclick="switchAuthTab('login')" class="btn-smooth py-2 rounded-lg bg-brand-600 text-white">Masuk Akun</button>
+                <button id="tab-reg-btn" onclick="switchAuthTab('register')" class="btn-smooth py-2 rounded-lg text-gray-400 hover:text-white">Daftar Anggota Baru</button>
             </div>
 
             <!-- FORM LOGIN -->
@@ -126,7 +136,7 @@
                         <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-obsidian border border-darkborder rounded-xl text-sm text-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-lg shadow-brand-500/20 text-sm flex items-center justify-center gap-2">
+                <button type="submit" class="btn-smooth w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/25 text-sm flex items-center justify-center gap-2">
                     <span>Masuk Portal Siswa</span>
                     <i class="fa-solid fa-arrow-right text-xs"></i>
                 </button>
@@ -166,7 +176,7 @@
 
                 <div>
                     <label class="block font-semibold text-gray-400 mb-1">Foto Profil Siswa (Wajib untuk Kartu Anggota)</label>
-                    <input type="file" id="reg-photo" accept="image/*" required onchange="previewRegProfilePhoto(event)" class="w-full text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-brand-500/20 file:text-brand-500 file:font-bold bg-obsidian border border-darkborder rounded-xl p-1">
+                    <input type="file" id="reg-photo" accept="image/*" required onchange="previewRegProfilePhoto(event)" class="w-full text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-brand-600/20 file:text-brand-400 file:font-bold bg-obsidian border border-darkborder rounded-xl p-1">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2.5">
@@ -181,10 +191,10 @@
                 </div>
 
                 <div class="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-gray-300">
-                    <i class="fa-solid fa-shield-halved text-brand-500 mr-1"></i> Setelah mendaftar, akun akan diverifikasi oleh Pengajar sebelum bisa login.
+                    <i class="fa-solid fa-shield-halved text-brand-400 mr-1"></i> Setelah mendaftar, akun akan diverifikasi oleh Pengajar sebelum bisa login.
                 </div>
 
-                <button type="submit" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-lg shadow-brand-500/20">
+                <button type="submit" class="btn-smooth w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20">
                     Kirim Pendaftaran Anggota
                 </button>
             </form>
@@ -196,48 +206,62 @@
     <!-- ===================================================================== -->
     <div id="dashboard-screen" class="hidden min-h-screen flex flex-col md:flex-row">
 
-        <!-- SIDEBAR -->
-        <aside class="w-full md:w-64 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-darkborder flex flex-col justify-between shrink-0">
+        <!-- SIDEBAR (DESKTOP) & COMPACT BAR (MOBILE) -->
+        <aside class="w-full md:w-64 bg-white dark:bg-darkcard border-b md:border-b-0 md:border-r border-slate-200 dark:border-darkborder flex flex-col justify-between shrink-0 sticky top-0 md:static z-30">
             <div>
-                <div class="p-5 border-b border-slate-200 dark:border-darkborder flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-brand-500 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-brand-500/20">
+                <!-- Brand Header -->
+                <div class="p-3.5 md:p-5 border-b border-slate-200 dark:border-darkborder flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 md:w-10 md:h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-brand-600/20">
                             <i class="fa-solid fa-camera"></i>
                         </div>
                         <div>
-                            <h2 class="font-extrabold text-slate-900 dark:text-white text-sm leading-tight">Capture Academy</h2>
-                            <span class="text-[10px] text-brand-500 font-bold tracking-widest uppercase">PORTAL MURID</span>
+                            <h2 class="font-extrabold text-slate-900 dark:text-white text-xs md:text-sm leading-tight">Capture Academy</h2>
+                            <span class="text-[9px] md:text-[10px] text-brand-500 font-bold tracking-widest uppercase">PORTAL MURID</span>
                         </div>
+                    </div>
+
+                    <!-- Mobile Quick Theme, Sync & Logout -->
+                    <div class="flex md:hidden items-center gap-1.5">
+                        <button onclick="toggleTheme()" class="btn-smooth w-8 h-8 rounded-lg bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-brand-500 flex items-center justify-center">
+                            <i id="mobile-theme-icon" class="fa-solid fa-sun text-xs"></i>
+                        </button>
+                        <button onclick="syncStudentData(true, false)" class="btn-smooth w-8 h-8 rounded-lg bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-brand-500 flex items-center justify-center">
+                            <i id="mobile-sync-icon" class="fa-solid fa-rotate text-xs"></i>
+                        </button>
+                        <button onclick="handleStudentLogout()" class="btn-smooth w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Student Mini Profile -->
-                <div class="p-3.5 mx-4 mt-4 bg-slate-100 dark:bg-obsidian rounded-2xl border border-slate-200 dark:border-darkborder flex items-center gap-3">
+                <!-- Student Mini Profile (Desktop) -->
+                <div class="hidden md:flex p-3.5 mx-4 mt-4 bg-slate-100 dark:bg-obsidian rounded-2xl border border-slate-200 dark:border-darkborder items-center gap-3">
                     <img id="sb-avatar" src="" alt="Profil" class="w-11 h-11 rounded-xl object-cover border border-brand-500/40 shrink-0">
                     <div class="overflow-hidden">
                         <h4 id="sb-name" class="text-xs font-extrabold text-slate-900 dark:text-white truncate">Siswa</h4>
-                        <p id="sb-class" class="text-[10px] text-brand-500 font-bold truncate">Kelas</p>
+                        <p id="sb-class" class="text-[10px] text-brand-400 font-bold truncate">Kelas</p>
                         <p id="sb-school" class="text-[10px] text-gray-500 truncate">Sekolah</p>
                     </div>
                 </div>
 
-                <!-- Theme & Sync Controls -->
-                <div class="px-4 pt-3 flex gap-2">
-                    <button onclick="toggleTheme()" class="flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition flex items-center justify-center gap-1.5">
+                <!-- Theme & Sync Controls (Desktop) -->
+                <div class="hidden md:flex px-4 pt-3 gap-2">
+                    <button onclick="toggleTheme()" class="btn-smooth flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 flex items-center justify-center gap-1.5">
                         <i id="theme-icon" class="fa-solid fa-sun text-brand-500"></i>
                         <span id="theme-label">Light Mode</span>
                     </button>
-                    <button onclick="syncStudentData(true, false)" title="Sinkronkan Data Terbaru" class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
+                    <button onclick="syncStudentData(true, false)" title="Sinkronkan Data Terbaru" class="btn-smooth py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500">
                         <i id="manual-sync-icon" class="fa-solid fa-rotate text-brand-500"></i>
                     </button>
                 </div>
 
-                <!-- Navigation Menu -->
-                <nav class="p-4 space-y-1" id="sidebar-nav"></nav>
+                <!-- Navigation Menu: Classified on Desktop, Compact Strip on Mobile -->
+                <nav id="sidebar-nav" class="p-2 md:p-4"></nav>
             </div>
 
-            <div class="p-4 border-t border-slate-200 dark:border-darkborder">
-                <button onclick="handleStudentLogout()" class="w-full py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-red-500/20">
+            <div class="hidden md:block p-4 border-t border-slate-200 dark:border-darkborder">
+                <button onclick="handleStudentLogout()" class="btn-smooth w-full py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl flex items-center justify-center gap-2 border border-red-500/20">
                     <i class="fa-solid fa-right-from-bracket"></i> Keluar Akun
                 </button>
             </div>
@@ -247,16 +271,15 @@
         <main class="flex-1 flex flex-col min-h-screen overflow-y-auto">
             <header class="p-4 md:px-8 border-b border-slate-200 dark:border-darkborder bg-white/80 dark:bg-darkcard/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center gap-2">
                 <div>
-                    <h1 id="page-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Dashboard Siswa</h1>
-                    <p id="page-subtitle" class="text-xs text-gray-500">Menciptakan Kebahagiaan lewat Karya Visual.</p>
+                    <h1 id="page-title" class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white">Dashboard Siswa</h1>
+                    <p id="page-subtitle" class="text-[11px] md:text-xs text-gray-500">Menciptakan Kebahagiaan lewat Karya Visual.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <!-- Subtle Background Sync Indicator (Non-Blocking) -->
-                    <span id="bg-sync-pill" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-[10px] font-bold text-brand-500">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Menyinkronkan...
+                    <span id="realtime-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-bold text-emerald-500">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="realtime-text">Realtime</span>
                     </span>
                     <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs font-semibold">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span id="header-school-badge">Anggota Aktif</span>
                     </span>
                 </div>
@@ -273,7 +296,7 @@
     <!-- MODAL DETAIL FOTO & RIWAYAT VERSI -->
     <div id="photo-modal" class="fixed inset-0 z-50 bg-black/90 hidden backdrop-blur-md flex items-center justify-center p-4">
         <div class="relative max-w-4xl w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-            <button onclick="closePhotoModal()" class="absolute top-3 right-3 z-10 w-8 h-8 bg-black/70 hover:bg-brand-500 text-white rounded-full flex items-center justify-center">
+            <button onclick="closePhotoModal()" class="btn-smooth absolute top-3 right-3 z-10 w-8 h-8 bg-black/70 hover:bg-brand-600 text-white rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="md:w-7/12 bg-black flex items-center justify-center p-3">
@@ -281,9 +304,9 @@
             </div>
             <div class="md:w-5/12 p-6 overflow-y-auto space-y-4 text-xs">
                 <div>
-                    <span id="pm-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-500">Karya</span>
+                    <span id="pm-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Karya</span>
                     <h3 id="pm-title" class="text-base font-extrabold text-slate-900 dark:text-white mt-2">Judul</h3>
-                    <p id="pm-author" class="text-brand-500 font-semibold mt-0.5">Oleh</p>
+                    <p id="pm-author" class="text-brand-400 font-semibold mt-0.5">Oleh</p>
                 </div>
 
                 <div class="p-3 rounded-xl bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-1.5">
@@ -312,10 +335,10 @@
                 <p id="a4-modal-sub" class="text-xs text-gray-400">Siap diunduh dalam format PDF resolusi tinggi.</p>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="executeDownloadA4PDF()" id="btn-download-a4" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 flex items-center gap-2">
+                <button onclick="executeDownloadA4PDF()" id="btn-download-a4" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20 flex items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Download PDF Sekarang
                 </button>
-                <button onclick="closeA4Modal()" class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-xl">Tutup</button>
+                <button onclick="closeA4Modal()" class="btn-smooth px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-xl">Tutup</button>
             </div>
         </div>
         <div class="max-w-5xl w-full mx-auto flex-1 bg-neutral-900 overflow-y-auto p-6 rounded-b-2xl border-x border-b border-darkborder">
@@ -324,14 +347,15 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT CORE LOGIC (OPTIMIZED: CACHE-FIRST, THUMBNAILS, PARALLEL)  -->
+    <!-- JAVASCRIPT CORE LOGIC                                                 -->
     <!-- ===================================================================== -->
     <script>
         // URL WEB APP GOOGLE APPS SCRIPT SUROHMAN
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxgxQp-wSAgzUuEuZmhiG89swgBNTyC-K3Aj5KQO2GAmUvWzve1-2smVAllLlnE0U6v9A/exec";
-        const CACHE_STORAGE_KEY = "rc_student_db_cache_v1";
+        const CACHE_STORAGE_KEY = "rc_student_db_cache_v2";
+        const CUSTOM_CHECKLIST_KEY = "rc_student_custom_checklist_v1";
 
-        // STATE (Muat cache lokal instan jika tersedia)
+        // STATE
         let studentUser = JSON.parse(localStorage.getItem("rc_student_user")) || null;
         let cachedDB = JSON.parse(localStorage.getItem(CACHE_STORAGE_KEY)) || null;
         let db = cachedDB || { siswa: [], perencanaan: [], jurnal: [], presensi: [], tugas: [], materi: [], settings: {} };
@@ -339,19 +363,34 @@
         let activeTab = "overview";
         let regProfileBase64 = "";
         let studentQrScanner = null;
+        let realtimePollTimer = null;
+
+        // Materi Filter State
+        let materiFmtFilter = "all";
+        let materiCatFilter = "all";
+        let materiSearchQuery = "";
 
         // Batch Upload Queue State
         let uploadQueueItems = [];
         let revisionTargetTask = null;
 
-        // Portfolio Builder State
+        // Portfolio Builder & Custom Layout State
         let selectedPortfolioIds = new Set();
         let portfolioTemplate = "editorial";
+        let customPortfolioStyle = {
+            columns: 1,
+            bgColor: "#ffffff",
+            textColor: "#111827",
+            cardBgColor: "#f8fafc",
+            accentColor: "#2563eb",
+            showExif: true,
+            showBorder: true
+        };
         let currentA4Orientation = "portrait";
         let currentA4Filename = "Dokumen_A4.pdf";
 
         // =====================================================================
-        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER (HEMAT KUOTA & NGEBUT)
+        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER
         // =====================================================================
         function optimizeDriveImg(url, width = 600) {
             if (!url) return "";
@@ -364,7 +403,7 @@
         }
 
         // =====================================================================
-        // 1. IMAGE COMPRESSION (TAJAM NAMUN RINGAN) & AUTO-EXIF READER
+        // 1. IMAGE COMPRESSION & ROBUST EXIF READER (KAMERA & HP)
         // =====================================================================
         function compressImageFile(file, maxDimension = 1920, quality = 0.85) {
             return new Promise((resolve, reject) => {
@@ -403,29 +442,47 @@
         async function extractExifMetadata(file) {
             try {
                 if (typeof exifr === "undefined") return {};
-                const data = await exifr.parse(file, ["Make", "Model", "ISO", "ExposureTime", "FNumber", "LensModel"]);
+                const buffer = await file.arrayBuffer();
+                const data = await exifr.parse(buffer, {
+                    tiff: true,
+                    exif: true,
+                    xmp: true,
+                    mergeOutput: true
+                });
                 if (!data) return {};
 
-                const camera = [data.Make, data.Model].filter(Boolean).join(" ").trim() || "";
-                const iso = data.ISO ? String(data.ISO) : "";
+                const make = String(data.Make || "").trim();
+                const model = String(data.Model || "").trim();
+                let camera = "";
+                if (make && model && model.toLowerCase().startsWith(make.toLowerCase())) {
+                    camera = model;
+                } else {
+                    camera = [make, model].filter(Boolean).join(" ").trim();
+                }
+
+                const rawIso = data.ISO || data.ISOSpeedRatings || data.PhotographicSensitivity;
+                const iso = Array.isArray(rawIso) ? String(rawIso[0]) : (rawIso ? String(rawIso) : "");
+
                 let shutter = "";
                 if (data.ExposureTime) {
-                    shutter = data.ExposureTime < 1
-                        ? `1/${Math.round(1 / data.ExposureTime)}s`
-                        : `${data.ExposureTime}s`;
+                    const et = Number(data.ExposureTime);
+                    shutter = et < 1 ? `1/${Math.round(1 / et)}s` : `${et}s`;
                 }
-                const aperture = data.FNumber ? `f/${data.FNumber}` : "";
-                const lens = data.LensModel || "";
+
+                const aperture = data.FNumber ? `f/${Number(data.FNumber).toFixed(1).replace(/\.0$/, "")}` : "";
+                const lens = String(data.LensModel || data.Lens || "").trim();
+
                 return { camera, iso, shutter, aperture, lens };
             } catch (e) {
+                console.warn("EXIF parse fallback:", e);
                 return {};
             }
         }
 
         // =====================================================================
-        // 2. API CLIENT & STALE-WHILE-REVALIDATE BACKGROUND SYNC
+        // 2. FAST API CLIENT & REALTIME BACKGROUND SYNC
         // =====================================================================
-        async function callGAS(payload, showOverlay = true, text = "Menyinkronkan data...") {
+        async function callGAS(payload, showOverlay = false, text = "Menyinkronkan...") {
             if (showOverlay) {
                 document.getElementById("sync-text").innerText = text;
                 document.getElementById("batch-progress-box").classList.add("hidden");
@@ -433,6 +490,13 @@
                 document.getElementById("sync-overlay").classList.add("flex");
             }
             try {
+                if (payload.action === "getAllData") {
+                    const res = await fetch(`${GAS_WEBAPP_URL}?action=getAllData&_t=${Date.now()}`, {
+                        method: "GET",
+                        cache: "no-store"
+                    });
+                    return await res.json();
+                }
                 const res = await fetch(GAS_WEBAPP_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -450,24 +514,20 @@
             }
         }
 
-        function setBackgroundSyncIndicator(active) {
-            const pill = document.getElementById("bg-sync-pill");
-            const icon = document.getElementById("manual-sync-icon");
-            if (pill) {
-                pill.classList.toggle("hidden", !active);
-                pill.classList.toggle("inline-flex", active);
-            }
-            if (icon) {
-                icon.classList.toggle("fa-spin", active);
-            }
+        function setRealtimeIndicator(syncing) {
+            const txt = document.getElementById("realtime-text");
+            const ic1 = document.getElementById("manual-sync-icon");
+            const ic2 = document.getElementById("mobile-sync-icon");
+            if (txt) txt.innerText = syncing ? "Sync..." : "Realtime";
+            if (ic1) ic1.classList.toggle("fa-spin", syncing);
+            if (ic2) ic2.classList.toggle("fa-spin", syncing);
         }
 
         async function syncStudentData(notify = false, silentBackground = true) {
-            setBackgroundSyncIndicator(true);
-            // Jika belum pernah ada cache sama sekali, tampilkan overlay ringan sekali saja
+            setRealtimeIndicator(true);
             const useBlockingOverlay = !silentBackground && !cachedDB;
-            const res = await callGAS({ action: "getAllData" }, useBlockingOverlay, "Memuat data ekskul pertama kali...");
-            setBackgroundSyncIndicator(false);
+            const res = await callGAS({ action: "getAllData" }, useBlockingOverlay, "Memuat data ekskul...");
+            setRealtimeIndicator(false);
 
             if (res.status === "ok" && res.data) {
                 const prevSnapshot = JSON.stringify(db);
@@ -476,7 +536,6 @@
                 cachedDB = res.data;
                 localStorage.setItem(CACHE_STORAGE_KEY, nextSnapshot);
 
-                // Sinkronkan profil terbaru user
                 const freshMe = db.siswa.find(s => String(s.ID_Siswa) === String(studentUser.id));
                 if (freshMe) {
                     studentUser.name = freshMe.Nama_Lengkap;
@@ -489,12 +548,20 @@
                     updateSidebarProfileUI();
                 }
 
-                // Render ulang hanya jika ada data baru atau diminta user
                 if (prevSnapshot !== nextSnapshot || notify) {
                     renderCurrentTab();
                 }
                 if (notify) showToast("Data terbaru berhasil dimuat!");
             }
+        }
+
+        function startStudentRealtimePolling() {
+            if (realtimePollTimer) clearInterval(realtimePollTimer);
+            realtimePollTimer = setInterval(() => {
+                if (!document.hidden && studentUser) {
+                    syncStudentData(false, true);
+                }
+            }, 25000);
         }
 
         // =====================================================================
@@ -505,14 +572,17 @@
         function applyTheme() {
             const html = document.documentElement;
             const icon = document.getElementById("theme-icon");
+            const mIcon = document.getElementById("mobile-theme-icon");
             const lbl = document.getElementById("theme-label");
             if (isDark) {
                 html.classList.add("dark");
                 if (icon) icon.className = "fa-solid fa-sun text-brand-500";
+                if (mIcon) mIcon.className = "fa-solid fa-sun text-xs";
                 if (lbl) lbl.innerText = "Light Mode";
             } else {
                 html.classList.remove("dark");
                 if (icon) icon.className = "fa-solid fa-moon text-brand-500";
+                if (mIcon) mIcon.className = "fa-solid fa-moon text-xs";
                 if (lbl) lbl.innerText = "Dark Mode";
             }
             localStorage.setItem("rc_student_theme", isDark ? "dark" : "light");
@@ -524,8 +594,8 @@
             const isLogin = mode === "login";
             document.getElementById("login-form").classList.toggle("hidden", !isLogin);
             document.getElementById("register-form").classList.toggle("hidden", isLogin);
-            document.getElementById("tab-login-btn").className = isLogin ? "py-2 rounded-lg bg-brand-500 text-white transition" : "py-2 rounded-lg text-gray-400 hover:text-white transition";
-            document.getElementById("tab-reg-btn").className = !isLogin ? "py-2 rounded-lg bg-brand-500 text-white transition" : "py-2 rounded-lg text-gray-400 hover:text-white transition";
+            document.getElementById("tab-login-btn").className = isLogin ? "btn-smooth py-2 rounded-lg bg-brand-600 text-white" : "btn-smooth py-2 rounded-lg text-gray-400 hover:text-white";
+            document.getElementById("tab-reg-btn").className = !isLogin ? "btn-smooth py-2 rounded-lg bg-brand-600 text-white" : "btn-smooth py-2 rounded-lg text-gray-400 hover:text-white";
         }
 
         function toggleRegJurusanField(schoolVal) {
@@ -584,13 +654,14 @@
         function handleStudentLogout() {
             studentUser = null;
             localStorage.removeItem("rc_student_user");
+            if (realtimePollTimer) clearInterval(realtimePollTimer);
             stopStudentScanner();
             document.getElementById("dashboard-screen").classList.add("hidden");
             document.getElementById("auth-screen").classList.remove("hidden");
         }
 
         function updateSidebarProfileUI() {
-            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=ff6b00&color=fff";
+            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=2563eb&color=fff";
             document.getElementById("sb-avatar").src = optimizeDriveImg(studentUser.photoUrl, 200) || fallbackAvatar;
             document.getElementById("sb-name").innerText = studentUser.name;
             document.getElementById("sb-class").innerText = `${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}`;
@@ -603,18 +674,17 @@
             document.getElementById("dashboard-screen").classList.remove("hidden");
             updateSidebarProfileUI();
 
-            // 1. Render INSTAN dari cache (0 ms)
             getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
             switchTab("overview");
 
-            // 2. Sinkronkan data terbaru di latar belakang tanpa memblokir layar
             syncStudentData(false, true).then(() => {
                 getMySubmissions().forEach(t => selectedPortfolioIds.add(String(t.ID_Tugas)));
             });
+            startStudentRealtimePolling();
         }
 
         // =====================================================================
-        // 4. NAVIGATION & HELPERS
+        // 4. CLASSIFIED NAVIGATION (HALL OF FRAME DI BAWAH DASHBOARD + COMPACT HP)
         // =====================================================================
         function getMySubmissions() {
             return db.tugas.filter(t => String(t.ID_Siswa) === String(studentUser.id));
@@ -622,27 +692,66 @@
 
         function setupNavigation() {
             const needRevisionCount = getMySubmissions().filter(t => String(t.Perlu_Revisi) === "Ya").length;
-            const navItems = [
-                { id: "overview", label: "Dashboard Siswa", icon: "fa-house" },
-                { id: "misi", label: "Papan Misi & Brief", icon: "fa-bullseye" },
-                { id: "materi", label: "Materi & Silabus", icon: "fa-book-open" },
-                { id: "upload", label: "Kirim Tugas Foto", icon: "fa-cloud-arrow-up", badge: needRevisionCount > 0 ? needRevisionCount : null },
-                { id: "hall", label: "Hall of Frame", icon: "fa-trophy" },
-                { id: "tools", label: "Pocket Tools", icon: "fa-sliders" },
-                { id: "portfolio", label: "Portfolioku (PDF A4)", icon: "fa-images" },
-                { id: "badges", label: "Lencana & Sertifikat", icon: "fa-award" },
-                { id: "card", label: "Kartu Anggota & Absen", icon: "fa-id-card" }
+            const navGroups = [
+                {
+                    group: "Menu Utama",
+                    items: [
+                        { id: "overview", label: "Dashboard Siswa", short: "Home", icon: "fa-house" },
+                        { id: "hall", label: "Hall of Frame", short: "Galeri", icon: "fa-trophy" }
+                    ]
+                },
+                {
+                    group: "Belajar & Alat Bantu",
+                    items: [
+                        { id: "misi", label: "Papan Misi & Brief", short: "Misi", icon: "fa-bullseye" },
+                        { id: "materi", label: "Materi & Silabus", short: "Materi", icon: "fa-book-open" },
+                        { id: "tools", label: "Pocket Tools", short: "Tools", icon: "fa-sliders" }
+                    ]
+                },
+                {
+                    group: "Karya & Keanggotaan",
+                    items: [
+                        { id: "upload", label: "Kirim Tugas Foto", short: "Upload", icon: "fa-cloud-arrow-up", badge: needRevisionCount > 0 ? needRevisionCount : null },
+                        { id: "portfolio", label: "Portfolioku", short: "Portfolio", icon: "fa-images" },
+                        { id: "badges", label: "Lencana & Sertifikat", short: "Sertifikat", icon: "fa-award" },
+                        { id: "card", label: "Kartu Anggota & Absen", short: "Kartu/QR", icon: "fa-id-card" }
+                    ]
+                }
             ];
 
-            document.getElementById("sidebar-nav").innerHTML = navItems.map(item => `
-                <button onclick="switchTab('${item.id}')" class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-between ${activeTab === item.id ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-obsidian hover:text-slate-900 dark:hover:text-white'}">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid ${item.icon} w-4 text-center"></i>
-                        <span>${item.label}</span>
-                    </span>
-                    ${item.badge ? `<span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-500 text-black">Revisi (${item.badge})</span>` : ''}
-                </button>
-            `).join("");
+            const allFlatItems = navGroups.flatMap(g => g.items);
+
+            // Desktop: Terklasifikasi per sekat | Mobile: Bar tombol ringkas horizontal
+            document.getElementById("sidebar-nav").innerHTML = `
+                <!-- Compact Mobile Bar -->
+                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                    ${allFlatItems.map(item => `
+                        <button onclick="switchTab('${item.id}')" class="btn-smooth shrink-0 px-2.5 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5 ${activeTab === item.id ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-obsidian text-slate-600 dark:text-gray-400'}">
+                            <i class="fa-solid ${item.icon}"></i>
+                            <span>${item.short}</span>
+                            ${item.badge ? `<span class="px-1.5 py-0.2 text-[9px] rounded-full bg-amber-400 text-black font-extrabold">${item.badge}</span>` : ''}
+                        </button>
+                    `).join("")}
+                </div>
+
+                <!-- Classified Desktop Sidebar -->
+                <div class="hidden md:block space-y-4">
+                    ${navGroups.map(grp => `
+                        <div class="space-y-1">
+                            <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">${grp.group}</p>
+                            ${grp.items.map(item => `
+                                <button onclick="switchTab('${item.id}')" class="btn-smooth w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between ${activeTab === item.id ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-obsidian hover:text-slate-900 dark:hover:text-white'}">
+                                    <span class="flex items-center gap-2.5">
+                                        <i class="fa-solid ${item.icon} w-4 text-center"></i>
+                                        <span>${item.label}</span>
+                                    </span>
+                                    ${item.badge ? `<span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-400 text-black">Revisi (${item.badge})</span>` : ''}
+                                </button>
+                            `).join("")}
+                        </div>
+                    `).join("")}
+                </div>
+            `;
         }
 
         function switchTab(tabId) {
@@ -660,14 +769,14 @@
 
             const headers = {
                 overview: ["Dashboard Siswa", `Halo ${studentUser.nickname || studentUser.name}, siap berkarya hari ini?`],
+                hall: [`Hall of Frame — ${studentUser.school}`, "Karya terbaik pilihan pengajar dari rekan satu sekolahmu."],
                 misi: ["Papan Misi & Brief Tugas", "Baca panduan teknis dan tenggat waktu sebelum hunting foto."],
                 materi: ["Materi & Silabus E-Course", "Modul video, E-Book PDF A4, dan cheatsheet untuk semua angkatan."],
-                upload: ["Kirim Tugas Foto (Batch & Auto-EXIF)", "Unggah hingga ratusan foto sekaligus dengan kompresi tajam otomatis."],
-                hall: [`Hall of Frame — ${studentUser.school}`, "Karya terbaik pilihan pengajar dari rekan satu sekolahmu."],
-                tools: ["Pocket Tools Fotografer", "Simulator Segitiga Eksposure, Kalkulator DoF & Checklist Hunting."],
-                portfolio: ["Portfolioku & Cetak Album A4", "Pilih karya terbaikmu dan susun dengan berbagai template album A4."],
+                tools: ["Pocket Tools Fotografer", "Simulator Eksposure, Kalkulator DoF, Panduan Komposisi & Checklist Foto."],
+                upload: ["Kirim Tugas Foto (Batch & Auto-EXIF)", "Unggah hingga ratusan foto sekaligus dengan pembacaan EXIF otomatis."],
+                portfolio: ["Portfolioku", "Pilih karya terbaikmu dan atur template serta layout cetak PDF A4 sesuai kreativitasmu."],
                 badges: ["Lencana Keahlian & E-Sertifikat", "Kumpulkan lencana praktik dan unduh sertifikat kelulusan ekskul."],
-                card: ["Kartu Anggota Digital & Absensi", "QR Code kehadiran, rekap absensi, dan pembaruan kenaikan kelas."]
+                card: ["Kartu Anggota Digital & Absensi", "QR Code kehadiran, scan absensi sesi, dan pembaruan kenaikan kelas."]
             };
 
             if (headers[activeTab]) {
@@ -676,11 +785,11 @@
             }
 
             if (activeTab === "overview") renderStudentOverview(area);
+            else if (activeTab === "hall") renderHallOfFrame(area);
             else if (activeTab === "misi") renderPapanMisi(area);
             else if (activeTab === "materi") renderStudentMateri(area);
-            else if (activeTab === "upload") renderBatchUploadPage(area);
-            else if (activeTab === "hall") renderHallOfFrame(area);
             else if (activeTab === "tools") renderPocketTools(area);
+            else if (activeTab === "upload") renderBatchUploadPage(area);
             else if (activeTab === "portfolio") renderPortfolioBuilder(area);
             else if (activeTab === "badges") renderBadgesAndCert(area);
             else if (activeTab === "card") renderMemberCardAndProfile(area);
@@ -716,7 +825,7 @@
                         <div>
                             <p class="text-xs text-gray-400 font-semibold">Total Karya Terkirim</p>
                             <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">${mySubs.length} Foto</h3>
-                            <span class="text-[11px] text-brand-500 font-semibold">${graded.length} sudah dinilai</span>
+                            <span class="text-[11px] text-brand-400 font-semibold">${graded.length} sudah dinilai</span>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center border border-brand-500/20">
                             <i class="fa-solid fa-camera text-xl"></i>
@@ -737,10 +846,10 @@
                     <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-5 rounded-2xl flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-400 font-semibold">Kehadiran Ekskul</p>
-                            <h3 class="text-2xl font-extrabold text-sky-500 mt-1">${att.pct}%</h3>
+                            <h3 class="text-2xl font-extrabold text-brand-400 mt-1">${att.pct}%</h3>
                             <span class="text-[11px] text-gray-500">Hadir ${att.hadir} dari ${att.valid} sesi</span>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center border border-brand-500/20">
                             <i class="fa-solid fa-qrcode text-xl"></i>
                         </div>
                     </div>
@@ -752,7 +861,7 @@
                             <h4 class="text-sm font-bold text-amber-500">Ada ${revisionList.length} Tugas Memerlukan Revisi</h4>
                             <p class="text-xs text-gray-400">Pengajar meminta kamu memperbaiki karya pada tugas yang sama (riwayat versi lama tetap tersimpan).</p>
                         </div>
-                        <button onclick="switchTab('upload')" class="px-4 py-2 bg-amber-500 text-black text-xs font-extrabold rounded-xl whitespace-nowrap">Kirim Revisi Sekarang</button>
+                        <button onclick="switchTab('upload')" class="btn-smooth px-4 py-2 bg-brand-600 text-white text-xs font-extrabold rounded-xl whitespace-nowrap">Kirim Revisi Sekarang</button>
                     </div>
                 ` : ''}
 
@@ -760,7 +869,7 @@
                 <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Riwayat Tugas & Evaluasi Terbaru</h3>
-                        <button onclick="switchTab('upload')" class="px-3.5 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl">+ Kirim Tugas Baru</button>
+                        <button onclick="switchTab('upload')" class="btn-smooth px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">+ Kirim Tugas Baru</button>
                     </div>
                     <div class="space-y-3">
                         ${mySubs.map(t => `
@@ -774,16 +883,16 @@
                                             ${String(t.Perlu_Revisi) === "Ya" ? `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-black">Perlu Revisi</span>` : ''}
                                         </div>
                                         <p class="text-[11px] text-gray-500 mt-0.5">${t.Tanggal_Kirim} • ${t.Kamera} • ISO ${t.ISO} | ${t.Shutter} | ${t.Aperture}</p>
-                                        ${t.Feedback_Pengajar ? `<p class="text-[11px] text-brand-500 italic mt-1">"${t.Feedback_Pengajar}"</p>` : ''}
+                                        ${t.Feedback_Pengajar ? `<p class="text-[11px] text-brand-400 italic mt-1">"${t.Feedback_Pengajar}"</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 self-end sm:self-center">
                                     ${t.Status_Penilaian === "Sudah Dinilai"
                                         ? `<span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-500 text-xs font-extrabold">Skor: ${t.Nilai_Akhir_Karya}</span>`
-                                        : `<span class="px-3 py-1 rounded-xl bg-brand-500/15 text-brand-500 text-[11px] font-bold">Menunggu Nilai</span>`
+                                        : `<span class="px-3 py-1 rounded-xl bg-brand-500/15 text-brand-400 text-[11px] font-bold">Menunggu Nilai</span>`
                                     }
                                     ${String(t.Perlu_Revisi) === "Ya" ? `
-                                        <button onclick="startRevisionUpload('${t.ID_Tugas}')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-extrabold">
+                                        <button onclick="startRevisionUpload('${t.ID_Tugas}')" class="btn-smooth px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold">
                                             <i class="fa-solid fa-rotate-right mr-1"></i> Revisi (v${Number(t.Versi || 1) + 1})
                                         </button>
                                     ` : ''}
@@ -796,7 +905,7 @@
         }
 
         // =====================================================================
-        // 6. PAPAN MISI & BRIEF TUGAS + MATERI E-COURSE
+        // 6. PAPAN MISI & BRIEF TUGAS + MATERI E-COURSE DENGAN FILTER
         // =====================================================================
         function renderPapanMisi(container) {
             const mySchoolUnit = String(studentUser.school).toUpperCase().includes("SMK") ? "SMK" : "MA";
@@ -808,7 +917,7 @@
                         <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl flex flex-col justify-between space-y-4">
                             <div class="space-y-2.5">
                                 <div class="flex justify-between items-center">
-                                    <span class="px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-500 text-xs font-extrabold">${m.Pertemuan}</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-400 text-xs font-extrabold">${m.Pertemuan}</span>
                                     ${m.Deadline_Tugas ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-500 text-[11px] font-bold"><i class="fa-regular fa-clock mr-1"></i>Deadline: ${m.Deadline_Tugas}</span>` : ''}
                                 </div>
                                 <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${m.Topik}</h3>
@@ -816,10 +925,10 @@
                                 <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-xs space-y-1">
                                     <p><strong>Metode:</strong> ${m.Metode}</p>
                                     <p><strong>Lokasi Praktik:</strong> ${m.Lokasi}</p>
-                                    <p class="text-brand-500 font-semibold"><strong>Target Output:</strong> ${m.Target_Output}</p>
+                                    <p class="text-brand-400 font-semibold"><strong>Target Output:</strong> ${m.Target_Output}</p>
                                 </div>
                             </div>
-                            <button onclick="quickSelectMissionForUpload('${m.Topik.replace(/'/g, "\\'")}')" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition">
+                            <button onclick="quickSelectMissionForUpload('${m.Topik.replace(/'/g, "\\'")}')" class="btn-smooth w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">
                                 <i class="fa-solid fa-camera mr-1"></i> Kerjakan & Upload Foto Misi Ini
                             </button>
                         </div>
@@ -846,14 +955,40 @@
         }
 
         function renderStudentMateri(container) {
+            const cats = JSON.parse(db.settings.categoriesJSON || '["Dasar Fotografi","Komposisi & Visual","Bisnis Fotografi"]');
+            const filtered = db.materi.filter(m => {
+                const matchFmt = materiFmtFilter === "all" || String(m.Format).toLowerCase() === materiFmtFilter;
+                const matchCat = materiCatFilter === "all" || String(m.Kategori) === materiCatFilter;
+                const matchQuery = !materiSearchQuery || String(m.Judul).toLowerCase().includes(materiSearchQuery.toLowerCase()) || String(m.Rangkuman).toLowerCase().includes(materiSearchQuery.toLowerCase());
+                return matchFmt && matchCat && matchQuery;
+            });
+
             container.innerHTML = `
+                <!-- Filter Bar Materi & Silabus -->
+                <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-4 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button onclick="materiFmtFilter='all'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${materiFmtFilter === 'all' ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Semua (${db.materi.length})</button>
+                        <button onclick="materiFmtFilter='video'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${materiFmtFilter === 'video' ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}"><i class="fa-solid fa-play mr-1"></i>Video</button>
+                        <button onclick="materiFmtFilter='ebook'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${materiFmtFilter === 'ebook' ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}"><i class="fa-solid fa-book mr-1"></i>E-Book PDF</button>
+                        <button onclick="materiFmtFilter='cheatsheet'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${materiFmtFilter === 'cheatsheet' ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}"><i class="fa-solid fa-file-lines mr-1"></i>Cheatsheet</button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select onchange="materiCatFilter=this.value; renderCurrentTab()" class="px-3 py-1.5 bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder rounded-xl text-xs font-semibold">
+                            <option value="all" ${materiCatFilter === 'all' ? 'selected' : ''}>Semua Topik</option>
+                            ${cats.map(c => `<option value="${c}" ${materiCatFilter === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        </select>
+                        <input type="text" value="${materiSearchQuery}" oninput="materiSearchQuery=this.value; renderCurrentTab()" placeholder="Cari materi..." class="px-3 py-1.5 bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder rounded-xl text-xs focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${db.materi.map(m => {
+                    ${filtered.map(m => {
                         const isPdf = m.Format === "ebook" || m.Format === "cheatsheet";
                         return `
                             <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-brand-500/15 text-brand-500">${m.Format} • ${m.Kategori}</span>
+                                    <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-brand-500/15 text-brand-400">${m.Format} • ${m.Kategori}</span>
                                     <span class="text-xs text-gray-500">${m.Durasi_Baca || ''}</span>
                                 </div>
                                 <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${m.Judul}</h3>
@@ -868,19 +1003,19 @@
                                         ${m.Cover_URL ? `<img loading="lazy" src="${optimizeDriveImg(m.Cover_URL, 400)}" class="w-20 aspect-a4 rounded-lg object-cover border border-darkborder">` : ''}
                                         <div class="space-y-2">
                                             <p class="text-xs text-gray-500">${m.Jumlah_Halaman || 10} Halaman (Format A4)</p>
-                                            ${m.File_PDF_URL ? `<a href="${m.File_PDF_URL}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-file-pdf"></i> Buka / Unduh PDF</a>` : ''}
+                                            ${m.File_PDF_URL ? `<a href="${m.File_PDF_URL}" target="_blank" class="btn-smooth inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-file-pdf"></i> Buka / Unduh PDF</a>` : ''}
                                         </div>
                                     </div>
                                 ` : ''}
                             </div>
                         `;
-                    }).join('') || '<p class="col-span-full text-center py-12 text-xs text-gray-500">Belum ada materi pembelajaran yang diterbitkan.</p>'}
+                    }).join('') || '<p class="col-span-full text-center py-12 text-xs text-gray-500">Tidak ada materi yang sesuai dengan filter.</p>'}
                 </div>
             `;
         }
 
         // =====================================================================
-        // 7. KIRIM TUGAS FOTO BATCH (PARALLEL 3X + AUTO-EXIF + REVISI)
+        // 7. KIRIM TUGAS FOTO BATCH (AUTO-EXIF FIX + PARALLEL 3X + REVISI)
         // =====================================================================
         function startRevisionUpload(idTugas) {
             const target = getMySubmissions().find(t => String(t.ID_Tugas) === String(idTugas));
@@ -924,7 +1059,7 @@
                         </div>
 
                         <div id="up-custom-box" class="hidden">
-                            <label class="block font-bold text-brand-500 mb-1">Nama Tugas Custom</label>
+                            <label class="block font-bold text-brand-400 mb-1">Nama Tugas Custom</label>
                             <input type="text" id="up-custom-title" placeholder="Ketik judul proyek foto..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-obsidian border border-brand-500/40 rounded-xl">
                         </div>
 
@@ -932,16 +1067,19 @@
                         <div>
                             <label class="block font-bold mb-1">Pilih Foto (Bisa Pilih 1 hingga Ratusan Foto Sekaligus — Auto-EXIF & Parallel Upload)</label>
                             <div class="border-2 border-dashed border-slate-300 dark:border-darkborder hover:border-brand-500 rounded-2xl p-6 text-center relative cursor-pointer transition">
-                                <input type="file" id="up-multi-files" accept="image/*" multiple onchange="handleMultiFileSelection(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                                <input type="file" id="up-multi-files" accept="image/jpeg,image/jpg,image/png,image/*" multiple onchange="handleMultiFileSelection(event)" class="absolute inset-0 opacity-0 cursor-pointer">
                                 <i class="fa-solid fa-images text-3xl text-brand-500 mb-2"></i>
                                 <p class="font-bold text-slate-900 dark:text-white">Klik atau Seret Banyak Foto ke Sini</p>
-                                <p class="text-[11px] text-gray-500 mt-1">Otomatis membaca Kamera, ISO, Shutter & Aperture + unggah cepat 3 foto paralel sekaligus.</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Gunakan file JPG/JPEG asli dari kamera/HP agar data Kamera, ISO, Shutter & Aperture terbaca otomatis.</p>
                             </div>
                         </div>
 
+                        <!-- Preview Antrean File & EXIF Terdeteksi -->
+                        <div id="batch-queue-preview" class="space-y-2"></div>
+
                         <!-- Default Metadata -->
                         <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-3">
-                            <p class="font-bold text-brand-500">Data Default (Otomatis terisi jika EXIF terbaca, bisa diedit manual):</p>
+                            <p class="font-bold text-brand-400">Parameter Teknis & Cerita Foto (Terisi otomatis jika EXIF terbaca, atau isi manual jika foto dari WhatsApp):</p>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <label class="block text-[11px] text-gray-500 mb-1">Kamera / HP</label>
@@ -958,15 +1096,15 @@
                             </div>
                             <div class="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label class="block text-[11px] text-gray-500 mb-1">ISO Default</label>
+                                    <label class="block text-[11px] text-gray-500 mb-1">ISO</label>
                                     <input type="text" id="up-def-iso" placeholder="200" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] text-gray-500 mb-1">Shutter Default</label>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Shutter Speed</label>
                                     <input type="text" id="up-def-shutter" placeholder="1/250s" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] text-gray-500 mb-1">Aperture Default</label>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Aperture</label>
                                     <input type="text" id="up-def-aperture" placeholder="f/2.8" class="w-full px-3 py-2 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg">
                                 </div>
                             </div>
@@ -976,10 +1114,7 @@
                             </div>
                         </div>
 
-                        <!-- Preview Antrean File Terpilih -->
-                        <div id="batch-queue-preview" class="space-y-2"></div>
-
-                        <button type="submit" id="btn-submit-batch" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2">
+                        <button type="submit" id="btn-submit-batch" class="btn-smooth w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-extrabold rounded-xl shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-paper-plane"></i> Unggah Semua Foto ke Server Pengajar
                         </button>
                     </form>
@@ -993,9 +1128,8 @@
 
             uploadQueueItems = [];
             const previewBox = document.getElementById("batch-queue-preview");
-            previewBox.innerHTML = `<p class="text-xs font-bold text-brand-500"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Membaca EXIF & menyiapkan ${files.length} foto...</p>`;
+            previewBox.innerHTML = `<p class="text-xs font-bold text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Membaca metadata EXIF dari ${files.length} foto...</p>`;
 
-            // Baca EXIF secara paralel agar super cepat meski ratusan file
             const parsedList = await Promise.all(files.map(async (file) => {
                 const exif = await extractExifMetadata(file);
                 return {
@@ -1010,29 +1144,27 @@
             }));
             uploadQueueItems = parsedList;
 
-            if (uploadQueueItems[0].camera && !document.getElementById("up-def-camera").value) {
-                document.getElementById("up-def-camera").value = uploadQueueItems[0].camera;
-            }
-            if (uploadQueueItems[0].iso && !document.getElementById("up-def-iso").value) {
-                document.getElementById("up-def-iso").value = uploadQueueItems[0].iso;
-            }
-            if (uploadQueueItems[0].shutter && !document.getElementById("up-def-shutter").value) {
-                document.getElementById("up-def-shutter").value = uploadQueueItems[0].shutter;
-            }
-            if (uploadQueueItems[0].aperture && !document.getElementById("up-def-aperture").value) {
-                document.getElementById("up-def-aperture").value = uploadQueueItems[0].aperture;
+            // Cari foto pertama yang punya data EXIF untuk mengisi form otomatis
+            const firstWithExif = uploadQueueItems.find(x => x.camera || x.iso || x.shutter || x.aperture) || uploadQueueItems[0];
+            if (firstWithExif) {
+                if (firstWithExif.camera) document.getElementById("up-def-camera").value = firstWithExif.camera;
+                if (firstWithExif.lens) document.getElementById("up-def-gear").value = firstWithExif.lens;
+                if (firstWithExif.iso) document.getElementById("up-def-iso").value = firstWithExif.iso;
+                if (firstWithExif.shutter) document.getElementById("up-def-shutter").value = firstWithExif.shutter;
+                if (firstWithExif.aperture) document.getElementById("up-def-aperture").value = firstWithExif.aperture;
             }
 
+            const detectedCount = uploadQueueItems.filter(x => x.camera || x.iso || x.shutter || x.aperture).length;
             previewBox.innerHTML = `
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex justify-between items-center">
-                    <span class="font-bold text-emerald-500"><i class="fa-solid fa-check-circle mr-1"></i> ${uploadQueueItems.length} Foto Siap Diunggah</span>
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap justify-between items-center gap-2">
+                    <span class="font-bold text-emerald-500"><i class="fa-solid fa-check-circle mr-1"></i> ${uploadQueueItems.length} Foto Siap Diunggah (${detectedCount} EXIF Terbaca Otomatis)</span>
                     <span class="text-[11px] text-gray-400">Parallel Upload 3x + Kompresi Tajam</span>
                 </div>
                 <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                     ${uploadQueueItems.map((item, idx) => `
                         <div class="p-2 rounded-lg bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex justify-between items-center text-[11px]">
-                            <span class="truncate max-w-[55%] font-semibold">${idx + 1}. ${item.name}</span>
-                            <span class="text-gray-500">${item.camera || 'Manual EXIF'} • ${item.iso ? 'ISO ' + item.iso : 'Auto'}</span>
+                            <span class="truncate max-w-[45%] font-semibold">${idx + 1}. ${item.name}</span>
+                            <span class="text-brand-400 font-medium">${item.camera || 'Manual'} • ${item.iso ? 'ISO ' + item.iso : '-'} • ${item.shutter || '-'} • ${item.aperture || '-'}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -1075,7 +1207,7 @@
             const total = uploadQueueItems.length;
             let completed = 0;
             let successCount = 0;
-            const CONCURRENCY = 3; // Kirim 3 foto paralel bersamaan untuk pangkas waktu 3x lipat
+            const CONCURRENCY = 3;
 
             for (let i = 0; i < total; i += CONCURRENCY) {
                 const chunk = uploadQueueItems.slice(i, i + CONCURRENCY);
@@ -1137,9 +1269,9 @@
             });
 
             container.innerHTML = `
-                <div class="p-5 rounded-2xl bg-gradient-to-r from-brand-500/15 to-transparent border border-brand-500/30 flex items-center justify-between">
+                <div class="p-5 rounded-2xl bg-gradient-to-r from-brand-600/15 to-transparent border border-brand-500/30 flex items-center justify-between">
                     <div>
-                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-500">KURASI EKSLUSIF PENGAJAR</span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-400">KURASI EKSLUSIF PENGAJAR</span>
                         <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Karya Pilihan Unit ${studentUser.school}</h3>
                         <p class="text-xs text-gray-400">Pelajari pengaturan EXIF & komposisi dari karya terbaik rekan satu sekolahmu.</p>
                     </div>
@@ -1151,13 +1283,13 @@
                         <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden group">
                             <div class="relative h-60 bg-black overflow-hidden">
                                 <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 600)}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-500" onclick="openPhotoModal('${t.ID_Tugas}')">
-                                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-extrabold shadow">
+                                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-brand-600 text-white text-[10px] font-extrabold shadow">
                                     <i class="fa-solid fa-star mr-1"></i> Karya Pilihan
                                 </span>
                             </div>
                             <div class="p-4 space-y-2">
                                 <h4 class="text-sm font-extrabold text-slate-900 dark:text-white">${t.Judul_Tugas}</h4>
-                                <p class="text-xs text-brand-500 font-bold">Karya: ${t.Nama_Siswa} (${t.Kelas})</p>
+                                <p class="text-xs text-brand-400 font-bold">Karya: ${t.Nama_Siswa} (${t.Kelas})</p>
                                 <div class="flex flex-wrap gap-1.5 text-[10px] text-gray-400 pt-1">
                                     <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">${t.Kamera}</span>
                                     <span class="px-2 py-0.5 bg-slate-100 dark:bg-obsidian rounded">ISO ${t.ISO}</span>
@@ -1172,41 +1304,102 @@
         }
 
         // =====================================================================
-        // 9. POCKET TOOLS (SIMULATOR EXPOSURE, KALKULATOR DoF & CHECKLIST)
+        // 9. POCKET TOOLS (SIMULATOR, DoF, PANDUAN KOMPOSISI & CHECKLIST +)
         // =====================================================================
+        const DEFAULT_PHOTO_CHECKLIST = [
+            "Baterai kamera terisi penuh & bawa baterai cadangan",
+            "Kartu memori (SD Card) sudah diformat & kosong",
+            "Bersihkan permukaan depan lensa dengan kain microfiber",
+            "Cek mode file (RAW + JPG) & White Balance sesuai cuaca",
+            "Bawa reflektor lipat / tripod jika praktik outdoor/low-light"
+        ];
+
+        function getCustomChecklist() {
+            return JSON.parse(localStorage.getItem(CUSTOM_CHECKLIST_KEY)) || [];
+        }
+
+        function addCustomChecklistItem(e) {
+            e.preventDefault();
+            const inp = document.getElementById("new-checklist-input");
+            const val = inp.value.trim();
+            if (!val) return;
+            const list = getCustomChecklist();
+            list.push(val);
+            localStorage.setItem(CUSTOM_CHECKLIST_KEY, JSON.stringify(list));
+            inp.value = "";
+            renderCurrentTab();
+            showToast("Item checklist ditambahkan!");
+        }
+
+        function removeCustomChecklistItem(idx) {
+            const list = getCustomChecklist();
+            list.splice(idx, 1);
+            localStorage.setItem(CUSTOM_CHECKLIST_KEY, JSON.stringify(list));
+            renderCurrentTab();
+        }
+
         function renderPocketTools(container) {
+            const customItems = getCustomChecklist();
+
             container.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Simulator Segitiga Eksposure -->
-                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
-                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-sliders text-brand-500"></i> Simulator Visual Segitiga Eksposure
-                        </h3>
-                        <div class="relative h-48 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-darkborder">
-                            <img id="sim-preview-img" src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transition-all duration-200">
-                            <div id="sim-hud" class="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-lg bg-black/75 text-[11px] font-mono text-white flex justify-between">
-                                <span id="sim-status-text">Eksposure Seimbang (0 EV)</span>
-                                <span id="sim-blur-text">Tajam • Bokeh Sedang</span>
+                    <!-- Kolom Kiri: Simulator Segitiga Eksposure & Panduan White Balance -->
+                    <div class="space-y-6">
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-brand-500"></i> Simulator Visual Segitiga Eksposure
+                            </h3>
+                            <div class="relative h-48 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-darkborder">
+                                <img id="sim-preview-img" src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transition-all duration-200">
+                                <div id="sim-hud" class="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-lg bg-black/75 text-[11px] font-mono text-white flex justify-between">
+                                    <span id="sim-status-text">Eksposure Seimbang (0 EV)</span>
+                                    <span id="sim-blur-text">Tajam • Bokeh Sedang</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <div class="flex justify-between font-bold mb-1"><span>ISO (Sensitivitas Cahaya)</span><span id="lbl-sim-iso" class="text-brand-400">400</span></div>
+                                    <input type="range" id="rng-iso" min="100" max="6400" step="100" value="400" oninput="updateExposureSim()" class="w-full accent-brand-600">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-bold mb-1"><span>Aperture (Bukaan Diafragma)</span><span id="lbl-sim-ap" class="text-brand-400">f/2.8</span></div>
+                                    <input type="range" id="rng-ap" min="1.4" max="16" step="0.2" value="2.8" oninput="updateExposureSim()" class="w-full accent-brand-600">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-bold mb-1"><span>Shutter Speed (Kecepatan Rana)</span><span id="lbl-sim-sh" class="text-brand-400">1/250s</span></div>
+                                    <input type="range" id="rng-sh" min="1" max="1000" step="10" value="250" oninput="updateExposureSim()" class="w-full accent-brand-600">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="space-y-3 text-xs">
-                            <div>
-                                <div class="flex justify-between font-bold mb-1"><span>ISO (Sensitivitas Cahaya)</span><span id="lbl-sim-iso" class="text-brand-500">400</span></div>
-                                <input type="range" id="rng-iso" min="100" max="6400" step="100" value="400" oninput="updateExposureSim()" class="w-full accent-brand-500">
-                            </div>
-                            <div>
-                                <div class="flex justify-between font-bold mb-1"><span>Aperture (Bukaan Diafragma)</span><span id="lbl-sim-ap" class="text-brand-500">f/2.8</span></div>
-                                <input type="range" id="rng-ap" min="1.4" max="16" step="0.2" value="2.8" oninput="updateExposureSim()" class="w-full accent-brand-500">
-                            </div>
-                            <div>
-                                <div class="flex justify-between font-bold mb-1"><span>Shutter Speed (Kecepatan Rana)</span><span id="lbl-sim-sh" class="text-brand-500">1/250s</span></div>
-                                <input type="range" id="rng-sh" min="1" max="1000" step="10" value="250" oninput="updateExposureSim()" class="w-full accent-brand-500">
+                        <!-- Panduan Cepat Komposisi & White Balance -->
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3 text-xs">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-compass-drafting text-brand-500"></i> Panduan Cepat Komposisi & Suhu Warna (Kelvin)
+                            </h3>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder">
+                                    <strong class="text-brand-400 block">Rule of Thirds</strong>
+                                    <span class="text-[11px] text-gray-500">Letakkan mata subjek/point of interest pada titik pertemuan garis 3x3.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder">
+                                    <strong class="text-brand-400 block">Leading Lines</strong>
+                                    <span class="text-[11px] text-gray-500">Gunakan garis jalan, pagar, atau bayangan untuk mengarahkan pandangan ke subjek.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder">
+                                    <strong class="text-brand-400 block">3200K – 4000K (Cool)</strong>
+                                    <span class="text-[11px] text-gray-500">Cocok untuk lampu tungsten kuning indoor agar warna kulit tetap netral.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder">
+                                    <strong class="text-brand-400 block">5200K – 6500K (Warm)</strong>
+                                    <span class="text-[11px] text-gray-500">Ideal untuk pemotretan siang hari, berawan, dan nuansa golden hour hangat.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Kalkulator Depth of Field & Checklist Hunting -->
+                    <!-- Kolom Kanan: Kalkulator DoF & Checklist Persiapan Foto (+ Custom) -->
                     <div class="space-y-6">
                         <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3 text-xs">
                             <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1226,27 +1419,48 @@
                                     <input type="number" id="dof-dist" step="0.5" value="2" oninput="calcDoF()" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-lg font-bold">
                                 </div>
                             </div>
-                            <div id="dof-result" class="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 font-bold text-brand-500">
+                            <div id="dof-result" class="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 font-bold text-brand-400">
                                 Ruang Tajam (DoF): ±0.15 meter (Background Bokeh Kuat)
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-2.5 text-xs">
-                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                                <i class="fa-solid fa-list-check text-emerald-500"></i> Checklist Persiapan Hunting Foto
-                            </h3>
-                            ${[
-                                "Baterai kamera terisi penuh & bawa baterai cadangan",
-                                "Kartu memori (SD Card) sudah diformat & kosong",
-                                "Bersihkan permukaan depan lensa dengan kain microfiber",
-                                "Cek mode file (RAW + JPG) & White Balance sesuai cuaca",
-                                "Bawa reflektor lipat / tripod jika praktik outdoor/low-light"
-                            ].map(item => `
-                                <label class="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 dark:bg-obsidian cursor-pointer">
-                                    <input type="checkbox" class="accent-brand-500 w-4 h-4">
-                                    <span>${item}</span>
-                                </label>
-                            `).join('')}
+                        <!-- Checklist Persiapan Foto + Tombol "+" Custom -->
+                        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-brand-500"></i> Checklist Persiapan Foto
+                                </h3>
+                                <span class="text-[10px] text-gray-500">Default + Custom</span>
+                            </div>
+
+                            <!-- Form Tambah Checklist Custom (+) -->
+                            <form onsubmit="addCustomChecklistItem(event)" class="flex gap-2">
+                                <input type="text" id="new-checklist-input" placeholder="Tambah perlengkapan / checklist sendiri..." class="flex-1 px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl focus:outline-none focus:border-brand-500">
+                                <button type="submit" title="Tambah Checklist" class="btn-smooth px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-extrabold rounded-xl shadow">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </form>
+
+                            <div class="space-y-2">
+                                ${DEFAULT_PHOTO_CHECKLIST.map(item => `
+                                    <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-obsidian cursor-pointer border border-transparent hover:border-brand-500/30">
+                                        <input type="checkbox" class="accent-brand-600 w-4 h-4">
+                                        <span>${item}</span>
+                                    </label>
+                                `).join('')}
+
+                                ${customItems.map((item, idx) => `
+                                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-brand-500/5 border border-brand-500/25">
+                                        <label class="flex items-center gap-2.5 cursor-pointer flex-1">
+                                            <input type="checkbox" class="accent-brand-600 w-4 h-4">
+                                            <span class="font-semibold text-brand-400">${item}</span>
+                                        </label>
+                                        <button onclick="removeCustomChecklistItem(${idx})" class="text-red-500 hover:bg-red-500/10 px-2 py-1 rounded-lg">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1286,8 +1500,24 @@
         }
 
         // =====================================================================
-        // 10. PORTFOLIOKU DINAMIS (PILIH FOTO & 3 TEMPLATE ALBUM A4)
+        // 10. PORTFOLIOKU (RASIO UTUH TANPA TERPOTONG + 5 TEMPLATE + CUSTOM LAYOUT)
         // =====================================================================
+        function applyPortfolioPreset(presetName) {
+            portfolioTemplate = presetName;
+            if (presetName === "editorial") {
+                customPortfolioStyle = { columns: 1, bgColor: "#ffffff", textColor: "#111827", cardBgColor: "#f8fafc", accentColor: "#2563eb", showExif: true, showBorder: true };
+            } else if (presetName === "grid") {
+                customPortfolioStyle = { columns: 2, bgColor: "#ffffff", textColor: "#111827", cardBgColor: "#f8fafc", accentColor: "#2563eb", showExif: true, showBorder: true };
+            } else if (presetName === "dark") {
+                customPortfolioStyle = { columns: 1, bgColor: "#0a0a0a", textColor: "#f3f4f6", cardBgColor: "#161616", accentColor: "#3b82f6", showExif: true, showBorder: true };
+            } else if (presetName === "polaroid") {
+                customPortfolioStyle = { columns: 2, bgColor: "#f1f5f9", textColor: "#0f172a", cardBgColor: "#ffffff", accentColor: "#1d4ed8", showExif: false, showBorder: true };
+            } else if (presetName === "minimal") {
+                customPortfolioStyle = { columns: 3, bgColor: "#ffffff", textColor: "#111827", cardBgColor: "#ffffff", accentColor: "#2563eb", showExif: false, showBorder: false };
+            }
+            renderCurrentTab();
+        }
+
         function renderPortfolioBuilder(container) {
             const mySubs = getMySubmissions();
             if (selectedPortfolioIds.size === 0 && mySubs.length > 0) {
@@ -1298,35 +1528,83 @@
                 <div class="bg-white dark:bg-darkcard border border-brand-500/30 p-6 rounded-2xl space-y-5">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div>
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-500">CUSTOM PORTFOLIO ALBUM BUILDER (A4)</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Pilih Template & Susun Karya Fotografimu</h3>
-                            <p class="text-xs text-gray-400">Centang foto di bawah yang ingin dimasukkan ke buku album PDF A4 (${selectedPortfolioIds.size} foto dipilih).</p>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-400">PORTFOLIOKU • CUSTOM ALBUM BUILDER (A4)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Kreasikan Layout & Cetak Portofolio Tanpa Potong Rasio</h3>
+                            <p class="text-xs text-gray-400">Foto dicetak utuh mengikuti rasio asli (${selectedPortfolioIds.size} foto dipilih). Pilih preset template atau atur layout sendiri.</p>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
-                            <select onchange="portfolioTemplate=this.value" class="px-3 py-2.5 bg-slate-100 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl text-xs font-bold">
-                                <option value="editorial" ${portfolioTemplate === 'editorial' ? 'selected' : ''}>Template 1: Editorial Classic</option>
-                                <option value="grid" ${portfolioTemplate === 'grid' ? 'selected' : ''}>Template 2: Contact Sheet Grid (2 Kolom)</option>
-                                <option value="dark" ${portfolioTemplate === 'dark' ? 'selected' : ''}>Template 3: Dark Gallery Exhibition</option>
-                            </select>
-
-                            <button onclick="openAlbumA4Preview(false)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">
-                                <i class="fa-solid fa-images text-brand-500 mr-1"></i> Cetak Tanpa Nilai
+                            <button onclick="openAlbumA4Preview(false)" class="btn-smooth px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">
+                                <i class="fa-solid fa-images text-brand-400 mr-1"></i> Cetak Tanpa Nilai
                             </button>
-                            <button onclick="openAlbumA4Preview(true)" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20">
+                            <button onclick="openAlbumA4Preview(true)" class="btn-smooth px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20">
                                 <i class="fa-solid fa-file-pdf mr-1"></i> Cetak Dengan Nilai
                             </button>
                         </div>
                     </div>
 
+                    <!-- Preset Template & Kustomisasi Layout Kreatif Siswa -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-4 text-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-extrabold text-brand-400"><i class="fa-solid fa-palette mr-1"></i> 1. Pilih Template Dasar:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${[
+                                    ["editorial", "Editorial Classic"],
+                                    ["grid", "Contact Sheet (2 Kolom)"],
+                                    ["dark", "Dark Gallery"],
+                                    ["polaroid", "Polaroid Frame"],
+                                    ["minimal", "Minimalist 3-Grid"]
+                                ].map(([key, label]) => `
+                                    <button onclick="applyPortfolioPreset('${key}')" class="btn-smooth px-3 py-1.5 rounded-lg font-bold ${portfolioTemplate === key ? 'bg-brand-600 text-white' : 'bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder text-gray-500'}">
+                                        ${label}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200 dark:border-darkborder grid grid-cols-2 sm:grid-cols-5 gap-3 items-center">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Jumlah Kolom</label>
+                                <select onchange="customPortfolioStyle.columns=Number(this.value)" class="w-full px-2.5 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold">
+                                    <option value="1" ${customPortfolioStyle.columns === 1 ? 'selected' : ''}>1 Kolom (Besar)</option>
+                                    <option value="2" ${customPortfolioStyle.columns === 2 ? 'selected' : ''}>2 Kolom</option>
+                                    <option value="3" ${customPortfolioStyle.columns === 3 ? 'selected' : ''}>3 Kolom</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Warna Kertas</label>
+                                <input type="color" value="${customPortfolioStyle.bgColor}" onchange="customPortfolioStyle.bgColor=this.value" class="w-full h-8 rounded cursor-pointer bg-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Warna Kartu</label>
+                                <input type="color" value="${customPortfolioStyle.cardBgColor}" onchange="customPortfolioStyle.cardBgColor=this.value" class="w-full h-8 rounded cursor-pointer bg-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Warna Teks</label>
+                                <input type="color" value="${customPortfolioStyle.textColor}" onchange="customPortfolioStyle.textColor=this.value" class="w-full h-8 rounded cursor-pointer bg-transparent">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" ${customPortfolioStyle.showExif ? 'checked' : ''} onchange="customPortfolioStyle.showExif=this.checked" class="accent-brand-600">
+                                    <span class="text-[11px] font-semibold">Tampilkan EXIF</span>
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" ${customPortfolioStyle.showBorder ? 'checked' : ''} onchange="customPortfolioStyle.showBorder=this.checked" class="accent-brand-600">
+                                    <span class="text-[11px] font-semibold">Bingkai Kartu</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Foto Karya -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${mySubs.map(t => {
                             const checked = selectedPortfolioIds.has(String(t.ID_Tugas));
                             return `
-                                <div onclick="togglePortfolioSelection('${t.ID_Tugas}')" class="cursor-pointer rounded-2xl border-2 overflow-hidden transition ${checked ? 'border-brand-500 bg-brand-500/5' : 'border-slate-200 dark:border-darkborder opacity-60'}">
-                                    <div class="relative h-44 bg-black">
-                                        <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 500)}" class="w-full h-full object-cover">
-                                        <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center ${checked ? 'bg-brand-500 text-white' : 'bg-black/60 text-gray-400'}">
+                                <div onclick="togglePortfolioSelection('${t.ID_Tugas}')" class="cursor-pointer rounded-2xl border-2 overflow-hidden transition ${checked ? 'border-brand-600 bg-brand-600/5' : 'border-slate-200 dark:border-darkborder opacity-60'}">
+                                    <div class="relative h-48 bg-black flex items-center justify-center">
+                                        <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 500)}" class="max-h-full max-w-full object-contain">
+                                        <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center ${checked ? 'bg-brand-600 text-white' : 'bg-black/60 text-gray-400'}">
                                             <i class="fa-solid fa-check text-xs"></i>
                                         </div>
                                     </div>
@@ -1358,52 +1636,53 @@
 
             currentA4Orientation = "portrait";
             currentA4Filename = `Portofolio_A4_${studentUser.name.replace(/\s+/g, "_")}.pdf`;
-            document.getElementById("a4-modal-title").innerText = `Pratinjau Album Portofolio A4 (${portfolioTemplate.toUpperCase()})`;
-            document.getElementById("a4-modal-sub").innerText = includeGrades ? "Mode: Dengan Nilai & Evaluasi Pengajar" : "Mode: Tanpa Nilai (Full Karya Fotografi)";
+            document.getElementById("a4-modal-title").innerText = `Pratinjau Portfolioku A4 (${portfolioTemplate.toUpperCase()})`;
+            document.getElementById("a4-modal-sub").innerText = includeGrades ? "Mode: Dengan Nilai & Rasio Foto Utuh" : "Mode: Tanpa Nilai & Rasio Foto Utuh";
 
-            const isDarkTpl = portfolioTemplate === "dark";
-            const isGridTpl = portfolioTemplate === "grid";
-            const bgHex = isDarkTpl ? "#0a0a0a" : "#ffffff";
-            const textHex = isDarkTpl ? "#f3f4f6" : "#111827";
-            const cardBg = isDarkTpl ? "#161616" : "#f9fafb";
-            const borderHex = isDarkTpl ? "#2a2a2a" : "#e5e7eb";
+            const st = customPortfolioStyle;
+            const cols = st.columns || 1;
+            const isSingleCol = cols === 1;
+            const borderCss = st.showBorder ? `1px solid rgba(128,128,128,0.28)` : `none`;
 
             const target = document.getElementById("a4-render-target");
             target.innerHTML = `
-                <div class="a4-sheet" style="padding: 15mm; background: ${bgHex}; color: ${textHex}; font-family: 'Inter', sans-serif;">
-                    <div style="border-bottom: 3px solid #ff6b00; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div class="a4-sheet" style="padding: 14mm; background: ${st.bgColor}; color: ${st.textColor}; font-family: 'Inter', sans-serif;">
+                    <div style="border-bottom: 3px solid ${st.accentColor}; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <div>
-                            <div style="font-size: 9px; font-weight: 800; color: #ff6b00; letter-spacing: 2px;">PORTFOLIO FOTOGRAFI RESMI</div>
-                            <h1 style="font-size: 24px; font-weight: 900; margin: 4px 0 0 0;">${studentUser.name}</h1>
-                            <p style="font-size: 12px; opacity: 0.8; margin-top: 2px;">${studentUser.className} • ${studentUser.school}</p>
+                            <div style="font-size: 9px; font-weight: 800; color: ${st.accentColor}; letter-spacing: 2px;">PORTFOLIO FOTOGRAFI RESMI</div>
+                            <h1 style="font-size: 22px; font-weight: 900; margin: 4px 0 0 0;">${studentUser.name}</h1>
+                            <p style="font-size: 11px; opacity: 0.8; margin-top: 2px;">${studentUser.className} • ${studentUser.school}</p>
                         </div>
                         <div style="text-align: right; font-size: 10px;">
-                            <strong style="color: #ff6b00;">Rohman Capture Academy</strong><br>
+                            <strong style="color: ${st.accentColor};">Rohman Capture Academy</strong><br>
                             <span>${new Date().toLocaleDateString('id-ID')}</span>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: ${isGridTpl ? '1fr 1fr' : '1fr'}; gap: 16px;">
+                    <div style="display: grid; grid-template-columns: repeat(${cols}, minmax(0, 1fr)); gap: 14px;">
                         ${chosen.map((t, idx) => `
-                            <div style="border: 1px solid ${borderHex}; background: ${cardBg}; border-radius: 10px; padding: 12px; page-break-inside: avoid; display: flex; flex-direction: ${isGridTpl ? 'column' : 'row'}; gap: 14px;">
-                                <div style="width: ${isGridTpl ? '100%' : '46%'}; height: ${isGridTpl ? '170px' : '195px'}; background: #000; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
-                                    <img src="${optimizeDriveImg(t.Foto_URL, 1400)}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div style="border: ${borderCss}; background: ${st.cardBgColor}; border-radius: 10px; padding: 10px; page-break-inside: avoid; display: flex; flex-direction: ${isSingleCol ? 'row' : 'column'}; gap: 12px; align-items: ${isSingleCol ? 'center' : 'stretch'};">
+                                <!-- Wadah Foto Menjaga Rasio & Orientasi Asli Tanpa Terpotong -->
+                                <div style="width: ${isSingleCol ? '52%' : '100%'}; background: #050505; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <img src="${optimizeDriveImg(t.Foto_URL, 1400)}" crossorigin="anonymous" style="width: 100%; height: auto; max-height: ${isSingleCol ? '230px' : '190px'}; object-fit: contain; display: block;">
                                 </div>
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                     <div>
-                                        <div style="display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #ff6b00;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; font-weight: 800; color: ${st.accentColor};">
                                             <span>KARYA #${idx + 1} • ${t.Tanggal_Kirim}</span>
-                                            ${includeGrades && t.Nilai_Akhir_Karya ? `<span style="background: #059669; color: #fff; padding: 2px 8px; border-radius: 99px;">Nilai: ${t.Nilai_Akhir_Karya}</span>` : ''}
+                                            ${includeGrades && t.Nilai_Akhir_Karya ? `<span style="background: #059669; color: #fff; padding: 2px 7px; border-radius: 99px;">Nilai: ${t.Nilai_Akhir_Karya}</span>` : ''}
                                         </div>
-                                        <h3 style="font-size: 13px; font-weight: 800; margin: 4px 0;">${t.Judul_Tugas}</h3>
-                                        <p style="font-size: 10px; font-style: italic; opacity: 0.85; margin-bottom: 8px;">"${t.Deskripsi}"</p>
-                                        <div style="font-size: 9px; opacity: 0.8; border-top: 1px dashed ${borderHex}; padding-top: 6px;">
-                                            <strong>Gear:</strong> ${t.Kamera} (${t.Lensa_Alat || '-'})<br>
-                                            <strong>EXIF:</strong> ISO ${t.ISO} | ${t.Shutter} | ${t.Aperture}
-                                        </div>
+                                        <h3 style="font-size: 12px; font-weight: 800; margin: 4px 0;">${t.Judul_Tugas}</h3>
+                                        <p style="font-size: 9.5px; font-style: italic; opacity: 0.85; margin-bottom: 6px;">"${t.Deskripsi}"</p>
+                                        ${st.showExif ? `
+                                            <div style="font-size: 8.5px; opacity: 0.8; border-top: 1px dashed rgba(128,128,128,0.3); padding-top: 5px;">
+                                                <strong>Gear:</strong> ${t.Kamera} (${t.Lensa_Alat || '-'})<br>
+                                                <strong>EXIF:</strong> ISO ${t.ISO} | ${t.Shutter} | ${t.Aperture}
+                                            </div>
+                                        ` : ''}
                                     </div>
                                     ${includeGrades && t.Feedback_Pengajar ? `
-                                        <div style="margin-top: 8px; padding: 6px 8px; background: rgba(255,107,0,0.12); border-left: 3px solid #ff6b00; font-size: 9px;">
+                                        <div style="margin-top: 6px; padding: 5px 8px; background: rgba(37,99,235,0.12); border-left: 3px solid ${st.accentColor}; font-size: 8.5px;">
                                             <strong>Catatan Pengajar:</strong> ${t.Feedback_Pengajar}
                                         </div>
                                     ` : ''}
@@ -1418,7 +1697,7 @@
         }
 
         // =====================================================================
-        // 11. SKILL BADGES & E-SERTIFIKAT KELULUSAN EKSKUL (PDF A4 LANDSCAPE)
+        // 11. SKILL BADGES & E-SERTIFIKAT (MENDUKUNG DESAIN CUSTOM DARI PENGAJAR)
         // =====================================================================
         function renderBadgesAndCert(container) {
             const mySubs = getMySubmissions();
@@ -1437,7 +1716,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     ${badges.map(b => `
                         <div class="p-5 rounded-2xl border ${b.unlocked ? 'bg-white dark:bg-darkcard border-brand-500/40' : 'bg-slate-100 dark:bg-obsidian border-slate-200 dark:border-darkborder opacity-50'} space-y-2">
-                            <div class="w-11 h-11 rounded-xl ${b.unlocked ? 'bg-brand-500 text-white' : 'bg-gray-700 text-gray-400'} flex items-center justify-center">
+                            <div class="w-11 h-11 rounded-xl ${b.unlocked ? 'bg-brand-600 text-white' : 'bg-gray-700 text-gray-400'} flex items-center justify-center">
                                 <i class="fa-solid ${b.icon} text-lg"></i>
                             </div>
                             <h4 class="text-xs font-extrabold text-slate-900 dark:text-white">${b.title}</h4>
@@ -1449,11 +1728,11 @@
 
                 <div class="bg-white dark:bg-darkcard border border-brand-500/30 p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <span class="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest">E-SERTIFIKAT RESMI ACADEMY</span>
+                        <span class="text-[10px] font-extrabold text-brand-400 uppercase tracking-widest">E-SERTIFIKAT RESMI ACADEMY</span>
                         <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Sertifikat Kelulusan & Kompetensi Fotografi</h3>
-                        <p class="text-xs text-gray-400">Dapat diunduh dalam format PDF A4 Landscape sebagai portofolio akademik & karir.</p>
+                        <p class="text-xs text-gray-400">Menggunakan template resmi dari pengajar dalam format PDF A4 Landscape.</p>
                     </div>
-                    <button onclick="openCertificatePreview()" class="px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-500/20 whitespace-nowrap">
+                    <button onclick="openCertificatePreview()" class="btn-smooth px-5 py-3 bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-600/20 whitespace-nowrap">
                         <i class="fa-solid fa-certificate mr-1"></i> Generate E-Sertifikat A4
                     </button>
                 </div>
@@ -1466,36 +1745,42 @@
             document.getElementById("a4-modal-title").innerText = "Pratinjau E-Sertifikat Ekskul Fotografi (A4 Landscape)";
             document.getElementById("a4-modal-sub").innerText = "Dokumen sertifikat resmi ditandatangani instruktur.";
 
+            // Jika pengajar menyematkan URL gambar background sertifikat custom di Pengaturan_Kop (key: certBgUrl)
+            const customCertBg = db.settings.certBgUrl ? optimizeDriveImg(db.settings.certBgUrl, 1800) : "";
+            const bgStyle = customCertBg
+                ? `background-image: url('${customCertBg}'); background-size: cover; background-position: center; color: #111827;`
+                : `background: #0a0a0a; color: #ffffff; border: 8px solid #2563eb;`;
+
             const target = document.getElementById("a4-render-target");
             target.innerHTML = `
-                <div class="a4-landscape" style="padding: 18mm; background: #0a0a0a; color: #ffffff; font-family: 'Inter', sans-serif; border: 8px solid #ff6b00; display: flex; flex-direction: column; justify-content: space-between; text-align: center;">
+                <div class="a4-landscape" style="padding: 18mm; ${bgStyle} font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: space-between; text-align: center; position: relative;">
                     <div>
-                        <div style="font-size: 11px; font-weight: 800; letter-spacing: 4px; color: #ff6b00;">ROHMAN CAPTURE ACADEMY • EKSKUL FOTOGRAFI</div>
+                        <div style="font-size: 11px; font-weight: 800; letter-spacing: 4px; color: #2563eb;">ROHMAN CAPTURE ACADEMY • EKSKUL FOTOGRAFI</div>
                         <h1 style="font-size: 36px; font-weight: 900; letter-spacing: 2px; margin: 14px 0 4px 0;">SERTIFIKAT KOMPETENSI</h1>
-                        <p style="font-size: 12px; color: #9ca3af;">Nomor: RCA/${new Date().getFullYear()}/${studentUser.id}</p>
+                        <p style="font-size: 12px; opacity: 0.75;">Nomor: RCA/${new Date().getFullYear()}/${studentUser.id}</p>
                     </div>
 
                     <div style="margin: 20px 0;">
-                        <p style="font-size: 13px; color: #d1d5db;">Diberikan dengan bangga kepada:</p>
-                        <h2 style="font-size: 32px; font-weight: 900; color: #ff6b00; margin: 10px 0; border-bottom: 2px solid #333; display: inline-block; padding: 0 28px 6px 28px;">${studentUser.name}</h2>
-                        <p style="font-size: 13px; font-weight: 600; color: #e5e7eb; margin-top: 6px;">${studentUser.className} — ${studentUser.school}</p>
-                        <p style="font-size: 12px; color: #9ca3af; max-width: 620px; margin: 14px auto 0 auto; line-height: 1.6;">
+                        <p style="font-size: 13px; opacity: 0.85;">Diberikan dengan bangga kepada:</p>
+                        <h2 style="font-size: 32px; font-weight: 900; color: #2563eb; margin: 10px 0; border-bottom: 2px solid rgba(128,128,128,0.4); display: inline-block; padding: 0 28px 6px 28px;">${studentUser.name}</h2>
+                        <p style="font-size: 13px; font-weight: 600; margin-top: 6px;">${studentUser.className} — ${studentUser.school}</p>
+                        <p style="font-size: 12px; opacity: 0.8; max-width: 620px; margin: 14px auto 0 auto; line-height: 1.6;">
                             Telah aktif mengikuti program pendidikan dan praktik lapangan Ekstrakurikuler Fotografi (Dasar Kamera, Pencahayaan, Komposisi, dan Visual Storytelling) pada Tahun Ajaran ${db.settings.ta || '2026/2027'}.
                         </p>
                     </div>
 
                     <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 20px;">
                         <div>
-                            <p style="font-size: 11px; color: #9ca3af;">Mengetahui,</p>
+                            <p style="font-size: 11px; opacity: 0.75;">Mengetahui,</p>
                             <p style="font-size: 12px; font-weight: 700;">Unit ${studentUser.school}</p>
                             <div style="height: 45px;"></div>
-                            <p style="font-size: 12px; font-weight: 700; border-top: 1px solid #555; padding-top: 4px;">Pembina Ekskul</p>
+                            <p style="font-size: 12px; font-weight: 700; border-top: 1px solid rgba(128,128,128,0.5); padding-top: 4px;">Pembina Ekskul</p>
                         </div>
                         <div>
-                            <p style="font-size: 11px; color: #9ca3af;">Jakarta, ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+                            <p style="font-size: 11px; opacity: 0.75;">Jakarta, ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
                             <p style="font-size: 12px; font-weight: 700;">Instruktur Utama Fotografi</p>
                             <div style="height: 45px;"></div>
-                            <p style="font-size: 12px; font-weight: 800; color: #ff6b00; border-top: 1px solid #555; padding-top: 4px;">${db.settings.pengajar || 'Surohman'}</p>
+                            <p style="font-size: 12px; font-weight: 800; color: #2563eb; border-top: 1px solid rgba(128,128,128,0.5); padding-top: 4px;">${db.settings.pengajar || 'Surohman'}</p>
                         </div>
                     </div>
                 </div>
@@ -1525,14 +1810,14 @@
         }
 
         // =====================================================================
-        // 12. DIGITAL MEMBER CARD QR + SCANNER ABSEN + UPDATE NAIK KELAS
+        // 12. DIGITAL MEMBER CARD QR + MOBILE CAMERA SCANNER FIX + UPDATE KELAS
         // =====================================================================
         let updatedProfileBase64 = "";
 
         function renderMemberCardAndProfile(container) {
             const att = computeMyAttendance();
             const isSMK = String(studentUser.school).toUpperCase().includes("SMK");
-            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=ff6b00&color=fff";
+            const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(studentUser.name) + "&background=2563eb&color=fff";
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1541,7 +1826,7 @@
                         <div class="bg-gradient-to-br from-darkcard via-obsidian to-darkcard border-2 border-brand-500/50 p-6 rounded-3xl shadow-2xl text-white space-y-5">
                             <div class="flex justify-between items-center border-b border-darkborder pb-3">
                                 <div>
-                                    <span class="text-[9px] font-extrabold tracking-[0.2em] text-brand-500 uppercase">OFFICIAL MEMBER CARD</span>
+                                    <span class="text-[9px] font-extrabold tracking-[0.2em] text-brand-400 uppercase">OFFICIAL MEMBER CARD</span>
                                     <h4 class="text-sm font-extrabold">Rohman Capture Academy</h4>
                                 </div>
                                 <i class="fa-solid fa-camera-retro text-brand-500 text-xl"></i>
@@ -1551,7 +1836,7 @@
                                 <img src="${optimizeDriveImg(studentUser.photoUrl, 300) || fallbackAvatar}" class="w-16 h-16 rounded-2xl object-cover border-2 border-brand-500">
                                 <div>
                                     <h3 class="text-base font-extrabold leading-tight">${studentUser.name}</h3>
-                                    <p class="text-xs text-brand-500 font-bold">${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}</p>
+                                    <p class="text-xs text-brand-400 font-bold">${studentUser.className} ${studentUser.jurusan && studentUser.jurusan !== '-' ? '• ' + studentUser.jurusan : ''}</p>
                                     <p class="text-[11px] text-gray-400">${studentUser.school}</p>
                                 </div>
                             </div>
@@ -1561,13 +1846,13 @@
                                 <p class="text-[10px] font-mono font-bold text-black mt-2">${studentUser.id}</p>
                             </div>
 
-                            <button onclick="startStudentScanTeacherQR()" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2">
+                            <button onclick="startStudentScanTeacherQR()" class="btn-smooth w-full py-3 bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-qrcode"></i> Scan QR Sesi Absen di Layar Pengajar
                             </button>
 
-                            <div id="student-qr-scanner-box" class="hidden rounded-xl overflow-hidden border border-darkborder bg-black">
-                                <div id="student-qr-reader" class="w-full"></div>
-                                <button onclick="stopStudentScanner()" class="w-full py-2 bg-red-600 text-white text-xs font-bold">Tutup Kamera</button>
+                            <div id="student-qr-scanner-box" class="hidden rounded-2xl overflow-hidden border border-brand-500/40 bg-black">
+                                <div id="student-qr-reader" class="w-full min-h-[250px]"></div>
+                                <button onclick="stopStudentScanner()" class="w-full py-2.5 bg-red-600 text-white text-xs font-bold">Tutup Kamera Scanner</button>
                             </div>
                         </div>
                     </div>
@@ -1592,7 +1877,7 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label class="block font-semibold mb-1">Kelas Sekarang (Update Saat Naik Kelas)</label>
-                                        <input type="text" id="upd-class" value="${studentUser.className}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-brand-500/40 rounded-xl font-bold text-brand-500">
+                                        <input type="text" id="upd-class" value="${studentUser.className}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-brand-500/40 rounded-xl font-bold text-brand-400">
                                     </div>
                                     ${isSMK ? `
                                         <div>
@@ -1605,7 +1890,7 @@
                                     <label class="block font-semibold mb-1">Ganti Foto Profil (Opsional)</label>
                                     <input type="file" accept="image/*" onchange="handleUpdateProfilePhoto(event)" class="w-full text-xs">
                                 </div>
-                                <button type="submit" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl">Simpan Perubahan Profil</button>
+                                <button type="submit" class="btn-smooth px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl">Simpan Perubahan Profil</button>
                             </form>
                         </div>
 
@@ -1620,7 +1905,7 @@
                                     return `
                                         <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-center">
                                             <span class="block text-[10px] text-gray-500 font-bold">${c}</span>
-                                            <span class="text-sm font-extrabold ${st === 'H' ? 'text-emerald-500' : (st === 'A' ? 'text-red-500' : 'text-brand-500')}">${st}</span>
+                                            <span class="text-sm font-extrabold ${st === 'H' ? 'text-emerald-500' : (st === 'A' ? 'text-red-500' : 'text-brand-400')}">${st}</span>
                                         </div>
                                     `;
                                 }).join('')}
@@ -1667,49 +1952,74 @@
             }
         }
 
-        function startStudentScanTeacherQR() {
+        async function startStudentScanTeacherQR() {
             const box = document.getElementById("student-qr-scanner-box");
+            const readerEl = document.getElementById("student-qr-reader");
+            if (!box || !readerEl) return;
+
+            await stopStudentScanner();
             box.classList.remove("hidden");
-            stopStudentScanner();
+            readerEl.innerHTML = `<p class="text-xs text-center text-gray-400 py-8">Meminta izin akses kamera HP...</p>`;
 
-            studentQrScanner = new Html5Qrcode("student-qr-reader");
-            studentQrScanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 200, height: 200 } },
-                async (decodedText) => {
-                    stopStudentScanner();
-                    let token = decodedText;
-                    let pertemuanKey = "";
-                    try {
-                        const parsed = JSON.parse(decodedText);
-                        if (parsed.token) token = parsed.token;
-                        if (parsed.pertemuan) pertemuanKey = parsed.pertemuan;
-                    } catch (e) {}
+            if (typeof Html5Qrcode === "undefined") {
+                showToast("Library scanner belum siap, coba muat ulang halaman.", "error");
+                return;
+            }
 
-                    const res = await callGAS({
-                        action: "scanAbsensiQR",
-                        scanType: "student_scans_teacher",
-                        idSiswa: studentUser.id,
-                        sessionToken: token,
-                        pertemuanKey: pertemuanKey
-                    }, true, "Mencatat absensi kehadiranmu...");
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                let cameraConfig = { facingMode: "environment" };
+                if (cameras && cameras.length > 0) {
+                    const backCam = cameras.find(c => /back|rear|environment/i.test(c.label));
+                    cameraConfig = backCam ? backCam.id : cameras[cameras.length - 1].id;
+                }
 
-                    if (res.status === "ok") {
-                        showToast(res.message);
-                        await syncStudentData(false, true);
-                    } else {
-                        showToast(res.message, "error");
-                    }
-                },
-                () => {}
-            ).catch(err => showToast("Gagal membuka kamera: " + err, "error"));
+                readerEl.innerHTML = "";
+                studentQrScanner = new Html5Qrcode("student-qr-reader");
+                await studentQrScanner.start(
+                    cameraConfig,
+                    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+                    async (decodedText) => {
+                        await stopStudentScanner();
+                        let token = decodedText;
+                        let pertemuanKey = "";
+                        try {
+                            const parsed = JSON.parse(decodedText);
+                            if (parsed.token) token = parsed.token;
+                            if (parsed.pertemuan) pertemuanKey = parsed.pertemuan;
+                        } catch (e) {}
+
+                        const res = await callGAS({
+                            action: "scanAbsensiQR",
+                            scanType: "student_scans_teacher",
+                            idSiswa: studentUser.id,
+                            sessionToken: token,
+                            pertemuanKey: pertemuanKey
+                        }, true, "Mencatat absensi kehadiranmu...");
+
+                        if (res.status === "ok") {
+                            showToast(res.message);
+                            await syncStudentData(false, true);
+                        } else {
+                            showToast(res.message, "error");
+                        }
+                    },
+                    () => {}
+                );
+            } catch (err) {
+                box.classList.add("hidden");
+                showToast("Akses kamera ditolak atau tidak tersedia. Pastikan izin kamera browser aktif (HTTPS).", "error");
+            }
         }
 
-        function stopStudentScanner() {
+        async function stopStudentScanner() {
             const box = document.getElementById("student-qr-scanner-box");
             if (box) box.classList.add("hidden");
             if (studentQrScanner) {
-                studentQrScanner.stop().catch(() => {});
+                try {
+                    await studentQrScanner.stop();
+                    studentQrScanner.clear();
+                } catch (e) {}
                 studentQrScanner = null;
             }
         }
@@ -1741,7 +2051,7 @@
                     </div>
                 `;
             } else {
-                revBox.innerHTML = `<p class="text-brand-500 font-semibold">Menunggu evaluasi dari pengajar.</p>`;
+                revBox.innerHTML = `<p class="text-brand-400 font-semibold">Menunggu evaluasi dari pengajar.</p>`;
             }
             document.getElementById("photo-modal").classList.remove("hidden");
         }
@@ -1751,7 +2061,7 @@
         function showToast(msg, type = "success") {
             const c = document.getElementById("toast-container");
             const el = document.createElement("div");
-            el.className = `px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl ${type === "success" ? "bg-brand-500" : "bg-red-600"}`;
+            el.className = `px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl ${type === "success" ? "bg-brand-600" : "bg-red-600"}`;
             el.innerText = msg;
             c.appendChild(el);
             setTimeout(() => el.remove(), 3200);
