@@ -21,11 +21,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#ff6b00',
-                            600: '#ea580c',
-                            700: '#c2410c',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         },
                         obsidian: '#010101',
                         darkcard: '#111111',
@@ -41,7 +42,7 @@
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- QR Code Generator & Scanner (Defer agar tidak memblokir render awal) -->
+    <!-- QR Code Generator & Scanner -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -50,8 +51,36 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #ff6b00; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
         .aspect-a4 { aspect-ratio: 1 / 1.414; }
+
+        /* Smooth Transitions untuk Sidebar Ringkas & Tombol */
+        #admin-sidebar {
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-label, .sidebar-group-title, .sidebar-brand-text {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        #admin-sidebar.compact-mode {
+            width: 4.75rem;
+        }
+        #admin-sidebar.compact-mode .sidebar-label,
+        #admin-sidebar.compact-mode .sidebar-group-title,
+        #admin-sidebar.compact-mode .sidebar-brand-text,
+        #admin-sidebar.compact-mode .sidebar-badge {
+            display: none;
+        }
+        #admin-sidebar.compact-mode .nav-item-btn {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .btn-smooth {
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-smooth:active {
+            transform: scale(0.97);
+        }
 
         @media print {
             body { background: #ffffff !important; color: #000000 !important; font-size: 11pt; }
@@ -71,25 +100,25 @@
     <!-- TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 no-print"></div>
 
-    <!-- BLOCKING SYNC OVERLAY (HANYA UNTUK AKSI MUTASI DATA PENTING) -->
+    <!-- BLOCKING SYNC OVERLAY (HANYA UNTUK LOGIN) -->
     <div id="sync-overlay" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center gap-3 no-print">
         <div class="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
-        <p id="sync-text" class="text-xs font-semibold text-white tracking-wide">Menyinkronkan data dengan Google Sheets...</p>
+        <p id="sync-text" class="text-xs font-semibold text-white tracking-wide">Memverifikasi akses...</p>
     </div>
 
     <!-- ===================================================================== -->
     <!-- 1. AUTH SCREEN PENGAJAR                                               -->
     <!-- ===================================================================== -->
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-obsidian relative overflow-hidden">
-        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="w-full max-w-md bg-darkcard border border-darkborder p-8 rounded-2xl shadow-2xl relative z-10">
             <div class="text-center mb-6">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-500/10 text-brand-500 rounded-2xl mb-3 border border-brand-500/30">
                     <i class="fa-solid fa-camera-retro text-3xl"></i>
                 </div>
-                <span class="block text-[10px] font-bold tracking-[0.2em] text-brand-500 uppercase">ADMIN & INSTRUCTOR PORTAL</span>
+                <span class="block text-[10px] font-bold tracking-[0.2em] text-brand-400 uppercase">ADMIN & INSTRUCTOR PORTAL</span>
                 <h1 class="text-2xl font-extrabold text-white mt-1">Rohman Capture Academy</h1>
                 <p class="text-xs text-gray-400 mt-1">Sistem Manajemen Ekskul Fotografi (SMKN 65 & MA Al-Hikmah)</p>
             </div>
@@ -109,7 +138,7 @@
                         <input type="password" id="admin-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-obsidian border border-darkborder rounded-xl text-sm text-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-lg shadow-brand-500/20 text-sm flex items-center justify-center gap-2">
+                <button type="submit" class="btn-smooth w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/25 text-sm flex items-center justify-center gap-2">
                     <span>Masuk Dashboard Pengajar</span>
                     <i class="fa-solid fa-arrow-right text-xs"></i>
                 </button>
@@ -122,43 +151,48 @@
     <!-- ===================================================================== -->
     <div id="dashboard-screen" class="hidden min-h-screen flex flex-col md:flex-row">
 
-        <!-- SIDEBAR -->
-        <aside class="w-full md:w-64 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-darkborder flex flex-col justify-between shrink-0 no-print">
+        <!-- SIDEBAR DENGAN KLASIFIKASI & TOGGLE RINGKAS -->
+        <aside id="admin-sidebar" class="w-full md:w-64 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-darkborder flex flex-col justify-between shrink-0 no-print">
             <div>
-                <div class="p-5 border-b border-slate-200 dark:border-darkborder flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-brand-500 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-brand-500/20">
+                <div class="p-4 border-b border-slate-200 dark:border-darkborder flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-brand-600/20 shrink-0">
                             <i class="fa-solid fa-camera"></i>
                         </div>
-                        <div>
-                            <h2 class="font-extrabold text-slate-900 dark:text-white text-sm leading-tight">Capture Academy</h2>
+                        <div class="sidebar-brand-text overflow-hidden">
+                            <h2 class="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate">Capture Academy</h2>
                             <span class="text-[10px] text-brand-500 font-bold tracking-widest uppercase">PORTAL PENGAJAR</span>
                         </div>
                     </div>
+                    <!-- Tombol Toggle Ringkas Sidebar -->
+                    <button onclick="toggleSidebarCompact()" title="Ringkas / Perluas Menu" class="btn-smooth w-8 h-8 rounded-lg bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-600 dark:text-gray-300 hover:border-brand-500 hover:text-brand-500 flex items-center justify-center shrink-0">
+                        <i id="compact-toggle-icon" class="fa-solid fa-angles-left text-xs"></i>
+                    </button>
                 </div>
 
                 <!-- Theme & Sync Bar -->
-                <div class="px-4 pt-4 flex gap-2">
-                    <button onclick="toggleTheme()" class="flex-1 py-2 px-2.5 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition flex items-center justify-center gap-1.5">
+                <div class="px-3 pt-3 flex gap-1.5">
+                    <button onclick="toggleTheme()" title="Ganti Tema" class="btn-smooth flex-1 py-2 px-2 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 flex items-center justify-center gap-1.5">
                         <i id="theme-icon" class="fa-solid fa-sun text-brand-500"></i>
-                        <span id="theme-label">Light Mode</span>
+                        <span id="theme-label" class="sidebar-label">Light Mode</span>
                     </button>
-                    <button onclick="syncDatabase(true, false)" title="Sinkronkan Data Terbaru" class="py-2 px-3 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 transition">
+                    <button onclick="syncDatabase(true, false)" title="Sinkronkan Data Realtime" class="btn-smooth py-2 px-2.5 rounded-xl text-[11px] font-semibold bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder text-slate-700 dark:text-gray-300 hover:border-brand-500 flex items-center justify-center">
                         <i id="manual-sync-icon" class="fa-solid fa-rotate text-brand-500"></i>
                     </button>
                 </div>
 
-                <!-- Navigation Menu -->
-                <nav class="p-4 space-y-1" id="sidebar-nav"></nav>
+                <!-- Navigation Menu Terklasifikasi -->
+                <nav class="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-195px)]" id="sidebar-nav"></nav>
             </div>
 
-            <div class="p-4 border-t border-slate-200 dark:border-darkborder space-y-2">
-                <div class="px-3 py-2 bg-slate-100 dark:bg-obsidian rounded-xl border border-slate-200 dark:border-darkborder">
+            <div class="p-3 border-t border-slate-200 dark:border-darkborder space-y-2">
+                <div class="sidebar-brand-text px-3 py-2 bg-slate-100 dark:bg-obsidian rounded-xl border border-slate-200 dark:border-darkborder">
                     <p class="text-[10px] text-gray-500 uppercase font-bold">Instruktur Aktif</p>
                     <p id="sidebar-instructor-name" class="text-xs font-bold text-slate-900 dark:text-white truncate">Surohman</p>
                 </div>
-                <button onclick="handleAdminLogout()" class="w-full py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 border border-red-500/20">
-                    <i class="fa-solid fa-right-from-bracket"></i> Keluar Admin
+                <button onclick="handleAdminLogout()" title="Keluar Admin" class="btn-smooth nav-item-btn w-full py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 border border-red-500/20">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="sidebar-label">Keluar Admin</span>
                 </button>
             </div>
         </aside>
@@ -172,10 +206,11 @@
                     <p id="page-subtitle" class="text-xs text-slate-500 dark:text-gray-400">Kelola pembelajaran & administrasi ekskul fotografi.</p>
                 </div>
 
-                <!-- Global Filter Sekolah & Angkatan + Background Sync Pill -->
+                <!-- Global Filter Sekolah & Angkatan + Realtime Sync Status -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <span id="bg-sync-pill" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-[10px] font-bold text-brand-500">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Sync...
+                    <span id="realtime-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-bold text-emerald-500">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="realtime-status-text">Realtime Aktif</span>
                     </span>
                     <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-obsidian px-3 py-1.5 rounded-xl border border-slate-200 dark:border-darkborder">
                         <i class="fa-solid fa-school text-brand-500 text-xs"></i>
@@ -209,7 +244,7 @@
     <!-- MODAL PENILAIAN RUBRIK DINAMIS (SMK / MA) -->
     <div id="grading-modal" class="fixed inset-0 z-50 bg-black/90 hidden backdrop-blur-md flex items-center justify-center p-4 no-print">
         <div class="relative max-w-5xl w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl overflow-hidden flex flex-col lg:flex-row max-h-[92vh]">
-            <button onclick="closeGradingModal()" class="absolute top-3 right-3 z-10 w-8 h-8 bg-black/70 hover:bg-brand-500 text-white rounded-full flex items-center justify-center transition">
+            <button onclick="closeGradingModal()" class="btn-smooth absolute top-3 right-3 z-10 w-8 h-8 bg-black/70 hover:bg-brand-600 text-white rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
@@ -236,11 +271,11 @@
                 <div class="space-y-4">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span id="gm-unit-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-500 border border-brand-500/30">RUBRIK SMK</span>
+                            <span id="gm-unit-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">RUBRIK SMK</span>
                             <span id="gm-version-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-obsidian text-slate-700 dark:text-gray-300">Versi 1</span>
                         </div>
                         <h3 id="gm-title" class="text-base font-extrabold text-slate-900 dark:text-white mt-2">Judul Tugas</h3>
-                        <p id="gm-student" class="text-xs text-brand-500 font-semibold">Nama Siswa • Kelas • Sekolah</p>
+                        <p id="gm-student" class="text-xs text-brand-400 font-semibold">Nama Siswa • Kelas • Sekolah</p>
                     </div>
 
                     <!-- 4 Indikator Rubrik Dinamis -->
@@ -253,19 +288,19 @@
                         <div class="grid grid-cols-2 gap-3 text-xs">
                             <div>
                                 <label id="gm-lbl-1" class="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Indikator 1</label>
-                                <input type="number" id="gm-ind-1" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-500">
+                                <input type="number" id="gm-ind-1" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-400">
                             </div>
                             <div>
                                 <label id="gm-lbl-2" class="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Indikator 2</label>
-                                <input type="number" id="gm-ind-2" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-500">
+                                <input type="number" id="gm-ind-2" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-400">
                             </div>
                             <div>
                                 <label id="gm-lbl-3" class="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Indikator 3</label>
-                                <input type="number" id="gm-ind-3" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-500">
+                                <input type="number" id="gm-ind-3" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-400">
                             </div>
                             <div>
                                 <label id="gm-lbl-4" class="block text-[11px] font-semibold text-slate-600 dark:text-gray-400 mb-1">Indikator 4</label>
-                                <input type="number" id="gm-ind-4" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-500">
+                                <input type="number" id="gm-ind-4" min="0" max="100" oninput="recalcModalRubric()" class="w-full px-3 py-1.5 bg-white dark:bg-darkcard border border-slate-300 dark:border-darkborder rounded-lg font-bold text-brand-400">
                             </div>
                         </div>
                     </div>
@@ -277,7 +312,7 @@
                     </div>
 
                     <label class="flex items-center gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 cursor-pointer">
-                        <input type="checkbox" id="gm-need-revision" class="w-4 h-4 accent-brand-500">
+                        <input type="checkbox" id="gm-need-revision" class="w-4 h-4 accent-brand-600">
                         <div>
                             <span class="text-xs font-bold text-amber-500 block">Minta Siswa Kirim Revisi</span>
                             <span class="text-[10px] text-slate-500 dark:text-gray-400">Mengaktifkan tombol unggah versi revisi di akun siswa.</span>
@@ -286,7 +321,7 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-200 dark:border-darkborder flex gap-2">
-                    <button onclick="submitModalGrade()" class="flex-1 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2">
+                    <button onclick="submitModalGrade()" class="btn-smooth flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-floppy-disk"></i> Simpan Nilai Rubrik
                     </button>
                 </div>
@@ -356,8 +391,8 @@
                     <textarea id="rm-deskripsi" rows="3" placeholder="Jelaskan syarat shutter speed, aturan komposisi, atau konsep yang harus dikerjakan murid..." class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeRencanaModal()" class="px-4 py-2 bg-slate-200 dark:bg-obsidian rounded-xl font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold">Simpan Rencana</button>
+                    <button type="button" onclick="closeRencanaModal()" class="btn-smooth px-4 py-2 bg-slate-200 dark:bg-obsidian rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold">Simpan Rencana</button>
                 </div>
             </form>
         </div>
@@ -419,22 +454,23 @@
                     <textarea id="jm-evaluasi" rows="2" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeJurnalModal()" class="px-4 py-2 bg-slate-200 dark:bg-obsidian rounded-xl font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold">Simpan Jurnal</button>
+                    <button type="button" onclick="closeJurnalModal()" class="btn-smooth px-4 py-2 bg-slate-200 dark:bg-obsidian rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold">Simpan Jurnal</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT CORE LOGIC (OPTIMIZED: CACHE-FIRST, THUMBNAILS, OPTIMISTIC)-->
+    <!-- JAVASCRIPT CORE LOGIC                                                 -->
     <!-- ===================================================================== -->
     <script>
         // URL WEB APP GOOGLE APPS SCRIPT SUROHMAN
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxgxQp-wSAgzUuEuZmhiG89swgBNTyC-K3Aj5KQO2GAmUvWzve1-2smVAllLlnE0U6v9A/exec";
-        const ADMIN_CACHE_KEY = "rc_admin_db_cache_v1";
+        const ADMIN_CACHE_KEY = "rc_admin_db_cache_v2";
+        const PROMOTE_UNDO_KEY = "rc_promote_undo_snapshot_v1";
 
-        // GLOBAL STATE (Muat cache lokal instan jika tersedia)
+        // GLOBAL STATE
         let adminUser = JSON.parse(localStorage.getItem("rc_admin_user")) || null;
         let cachedDB = JSON.parse(localStorage.getItem(ADMIN_CACHE_KEY)) || null;
         let db = cachedDB || {
@@ -450,14 +486,19 @@
         let activeTab = "overview";
         let globalSchoolFilter = "ALL";
         let globalGradeFilter = "ALL";
+        let siswaSubTab = "active"; // 'active' | 'alumni'
         let gradingStatusFilter = "all";
         let gradingMonthFilter = "all";
+        let materiFormatFilter = "all";
+        let materiCategoryFilter = "all";
+        let rekapSchoolFilter = "ALL";
         let rencanaViewMode = "list";
         let html5QrScanner = null;
         let currentGradingTaskId = null;
+        let realtimePollInterval = null;
 
         // =====================================================================
-        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER (HEMAT KUOTA & NGEBUT)
+        // 0. ADAPTIVE GOOGLE DRIVE IMAGE URL HELPER
         // =====================================================================
         function optimizeDriveImg(url, width = 600) {
             if (!url) return "";
@@ -470,15 +511,24 @@
         }
 
         // =====================================================================
-        // 1. API CLIENT & STALE-WHILE-REVALIDATE BACKGROUND SYNC
+        // 1. FAST API CLIENT & REALTIME BACKGROUND SYNC
         // =====================================================================
-        async function callGAS(payload, showOverlay = true, loadingText = "Menyinkronkan data...") {
+        async function callGAS(payload, showOverlay = false, loadingText = "Menyinkronkan...") {
             if (showOverlay) {
                 document.getElementById("sync-text").innerText = loadingText;
                 document.getElementById("sync-overlay").classList.remove("hidden");
                 document.getElementById("sync-overlay").classList.add("flex");
             }
             try {
+                // Gunakan GET untuk getAllData agar lebih cepat & tidak kena preflight
+                if (payload.action === "getAllData") {
+                    const res = await fetch(`${GAS_WEBAPP_URL}?action=getAllData&_t=${Date.now()}`, {
+                        method: "GET",
+                        cache: "no-store"
+                    });
+                    return await res.json();
+                }
+
                 const res = await fetch(GAS_WEBAPP_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -486,7 +536,7 @@
                 });
                 return await res.json();
             } catch (err) {
-                if (showOverlay) showToast("Koneksi server terganggu: " + err.message, "error");
+                if (showOverlay) showToast("Koneksi terganggu: " + err.message, "error");
                 return { status: "error", message: err.message };
             } finally {
                 if (showOverlay) {
@@ -496,23 +546,22 @@
             }
         }
 
-        function setBackgroundSyncIndicator(active) {
-            const pill = document.getElementById("bg-sync-pill");
+        function setRealtimeIndicator(syncing) {
+            const statusText = document.getElementById("realtime-status-text");
             const icon = document.getElementById("manual-sync-icon");
-            if (pill) {
-                pill.classList.toggle("hidden", !active);
-                pill.classList.toggle("inline-flex", active);
+            if (statusText) {
+                statusText.innerText = syncing ? "Menyinkronkan..." : "Realtime Aktif";
             }
             if (icon) {
-                icon.classList.toggle("fa-spin", active);
+                icon.classList.toggle("fa-spin", syncing);
             }
         }
 
         async function syncDatabase(notify = false, silentBackground = true) {
-            setBackgroundSyncIndicator(true);
-            const useBlockingOverlay = !silentBackground && !cachedDB;
-            const res = await callGAS({ action: "getAllData" }, useBlockingOverlay, "Memuat database ekskul dari Google Sheets...");
-            setBackgroundSyncIndicator(false);
+            setRealtimeIndicator(true);
+            const useOverlay = !silentBackground && !cachedDB;
+            const res = await callGAS({ action: "getAllData" }, useOverlay, "Memuat data ekskul...");
+            setRealtimeIndicator(false);
 
             if (res.status === "ok" && res.data) {
                 const prevSnapshot = JSON.stringify(db);
@@ -524,14 +573,25 @@
                 if (prevSnapshot !== nextSnapshot || notify) {
                     renderCurrentTab();
                 }
-                if (notify) showToast("Database berhasil disinkronkan!");
+                if (notify) showToast("Database tersinkronisasi!");
             }
         }
 
+        function startRealtimePolling() {
+            if (realtimePollInterval) clearInterval(realtimePollInterval);
+            // Cek pembaruan otomatis tiap 25 detik saat tab browser aktif
+            realtimePollInterval = setInterval(() => {
+                if (!document.hidden && adminUser) {
+                    syncDatabase(false, true);
+                }
+            }, 25000);
+        }
+
         // =====================================================================
-        // 2. THEME & AUTHENTICATION
+        // 2. THEME, COMPACT SIDEBAR & AUTHENTICATION
         // =====================================================================
         let isDark = localStorage.getItem("rc_admin_theme") !== "light";
+        let isSidebarCompact = localStorage.getItem("rc_admin_sidebar_compact") === "true";
 
         function applyTheme() {
             const html = document.documentElement;
@@ -554,25 +614,47 @@
             applyTheme();
         }
 
+        function applySidebarCompact() {
+            const sidebar = document.getElementById("admin-sidebar");
+            const icon = document.getElementById("compact-toggle-icon");
+            if (!sidebar) return;
+            sidebar.classList.toggle("compact-mode", isSidebarCompact);
+            if (icon) {
+                icon.className = isSidebarCompact ? "fa-solid fa-angles-right text-xs" : "fa-solid fa-angles-left text-xs";
+            }
+            localStorage.setItem("rc_admin_sidebar_compact", String(isSidebarCompact));
+        }
+
+        function toggleSidebarCompact() {
+            isSidebarCompact = !isSidebarCompact;
+            applySidebarCompact();
+        }
+
         async function handleAdminLogin(e) {
             e.preventDefault();
             const email = document.getElementById("admin-email").value.trim();
             const password = document.getElementById("admin-password").value.trim();
 
-            const res = await callGAS({ action: "login", email, password }, true, "Memverifikasi kredensial pengajar...");
+            // Jika sudah ada cache pengaturan admin & cocok, langsung masuk 0 ms!
+            if (cachedDB && cachedDB.settings && String(cachedDB.settings.adminEmail || "pengajar@ekskul.com").toLowerCase() === email.toLowerCase()) {
+                // Tetap verifikasi ke server secara cepat
+            }
+
+            const res = await callGAS({ action: "login", email, password }, true, "Masuk ke Portal Pengajar...");
             if (res.status === "ok" && res.user && res.user.role === "pengajar") {
                 adminUser = res.user;
                 localStorage.setItem("rc_admin_user", JSON.stringify(adminUser));
                 showToast("Selamat datang kembali, " + adminUser.name + "!");
                 initAdminDashboard();
             } else {
-                showToast(res.message || "Akses ditolak! Pastikan email & sandi pengajar benar.", "error");
+                showToast(res.message || "Email atau kata sandi salah!", "error");
             }
         }
 
         function handleAdminLogout() {
             adminUser = null;
             localStorage.removeItem("rc_admin_user");
+            if (realtimePollInterval) clearInterval(realtimePollInterval);
             stopQRScanner();
             document.getElementById("dashboard-screen").classList.add("hidden");
             document.getElementById("auth-screen").classList.remove("hidden");
@@ -582,16 +664,18 @@
             document.getElementById("auth-screen").classList.add("hidden");
             document.getElementById("dashboard-screen").classList.remove("hidden");
             document.getElementById("sidebar-instructor-name").innerText = adminUser.name || "Surohman";
+            applySidebarCompact();
 
-            // 1. Render INSTAN dari cache lokal (0 ms)
+            // Render INSTAN dari cache (0 ms)
             switchTab("overview");
 
-            // 2. Sinkronkan data terbaru di latar belakang tanpa memblokir layar
+            // Sinkronisasi realtime di background & aktifkan polling otomatis
             syncDatabase(false, true);
+            startRealtimePolling();
         }
 
         // =====================================================================
-        // 3. FILTER HELPER & NAVIGATION
+        // 3. FILTER HELPER & CLASSIFIED NAVIGATION
         // =====================================================================
         function onGlobalFilterChange() {
             globalSchoolFilter = document.getElementById("global-filter-school").value;
@@ -623,28 +707,48 @@
             const pendingTasks = db.tugas.filter(t => String(t.Archived).toUpperCase() !== "TRUE" && t.Status_Penilaian === "Belum Dinilai").length;
             const archivedTasks = db.tugas.filter(t => String(t.Archived).toUpperCase() === "TRUE").length;
 
-            const navItems = [
-                { id: "overview", label: "Dashboard Utama", icon: "fa-chart-pie" },
-                { id: "siswa", label: "Siswa & Approval", icon: "fa-users", badge: pendingStudents > 0 ? pendingStudents : null },
-                { id: "grading", label: "Penilaian Rubrik Karya", icon: "fa-square-check", badge: pendingTasks > 0 ? pendingTasks : null },
-                { id: "qr-presensi", label: "Absensi QR & Matriks", icon: "fa-qrcode" },
-                { id: "perencanaan", label: "Perencanaan & Misi", icon: "fa-calendar-days" },
-                { id: "jurnal", label: "Jurnal Mengajar", icon: "fa-book-open" },
-                { id: "materi", label: "Materi E-Course", icon: "fa-folder-plus" },
-                { id: "rekap", label: "Rekap & Predikat", icon: "fa-calculator" },
-                { id: "cetak", label: "Cetak Raport A4", icon: "fa-print" },
-                { id: "arsip", label: "Arsip Penilaian", icon: "fa-box-archive", badge: archivedTasks > 0 ? archivedTasks : null },
-                { id: "settings", label: "Pengaturan Kop & Master", icon: "fa-sliders" }
+            const navGroups = [
+                {
+                    group: "Operasional Utama",
+                    items: [
+                        { id: "overview", label: "Dashboard Utama", icon: "fa-chart-pie" },
+                        { id: "siswa", label: "Siswa & Approval", icon: "fa-users", badge: pendingStudents > 0 ? pendingStudents : null },
+                        { id: "qr-presensi", label: "Absensi QR & Matriks", icon: "fa-qrcode" }
+                    ]
+                },
+                {
+                    group: "Akademik & Evaluasi",
+                    items: [
+                        { id: "grading", label: "Penilaian Rubrik", icon: "fa-square-check", badge: pendingTasks > 0 ? pendingTasks : null },
+                        { id: "perencanaan", label: "Perencanaan & Misi", icon: "fa-calendar-days" },
+                        { id: "jurnal", label: "Jurnal Mengajar", icon: "fa-book-open" },
+                        { id: "materi", label: "Materi E-Course", icon: "fa-folder-plus" }
+                    ]
+                },
+                {
+                    group: "Laporan & Sistem",
+                    items: [
+                        { id: "rekap", label: "Rekap & Predikat", icon: "fa-calculator" },
+                        { id: "cetak", label: "Cetak Raport A4", icon: "fa-print" },
+                        { id: "arsip", label: "Arsip Penilaian", icon: "fa-box-archive", badge: archivedTasks > 0 ? archivedTasks : null },
+                        { id: "settings", label: "Pengaturan Kop", icon: "fa-sliders" }
+                    ]
+                }
             ];
 
-            document.getElementById("sidebar-nav").innerHTML = navItems.map(item => `
-                <button onclick="switchTab('${item.id}')" id="nav-${item.id}" class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-between ${activeTab === item.id ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-obsidian hover:text-slate-900 dark:hover:text-white'}">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid ${item.icon} w-4 text-center"></i>
-                        <span>${item.label}</span>
-                    </span>
-                    ${item.badge ? `<span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full ${activeTab === item.id ? 'bg-white text-brand-600' : 'bg-brand-500/20 text-brand-500'}">${item.badge}</span>` : ''}
-                </button>
+            document.getElementById("sidebar-nav").innerHTML = navGroups.map(grp => `
+                <div class="space-y-1">
+                    <p class="sidebar-group-title px-3 text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">${grp.group}</p>
+                    ${grp.items.map(item => `
+                        <button onclick="switchTab('${item.id}')" title="${item.label}" class="btn-smooth nav-item-btn w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between ${activeTab === item.id ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-obsidian hover:text-slate-900 dark:hover:text-white'}">
+                            <span class="flex items-center gap-2.5">
+                                <i class="fa-solid ${item.icon} w-4 text-center text-sm"></i>
+                                <span class="sidebar-label truncate">${item.label}</span>
+                            </span>
+                            ${item.badge ? `<span class="sidebar-badge px-2 py-0.5 text-[10px] font-extrabold rounded-full ${activeTab === item.id ? 'bg-white text-brand-600' : 'bg-brand-500/20 text-brand-400'}">${item.badge}</span>` : ''}
+                        </button>
+                    `).join("")}
+                </div>
             `).join("");
         }
 
@@ -665,12 +769,12 @@
 
             const headers = {
                 overview: ["Dashboard Pengajar", "Ringkasan statistik lintas sekolah (SMKN 65 Jakarta & MA Al-Hikmah)."],
-                siswa: ["Manajemen Siswa & Approval Akun", "Setujui pendaftar baru, pantau foto profil, atau jalankan kenaikan kelas."],
+                siswa: ["Manajemen Siswa, Alumni & Approval", "Setujui pendaftar baru, naikkan kelas massal, atau kelola data alumni."],
                 grading: ["Penilaian Karya Fotografi (Rubrik Otomatis)", "Evaluasi foto siswa dengan indikator bobot otomatis sesuai unit sekolah."],
                 "qr-presensi": ["Absensi QR Dua Arah & Matriks Kehadiran", "Pilih metode scan QR atau kelola status kehadiran H / I / S / A."],
                 perencanaan: ["Perencanaan Sesi & Papan Misi Murid", "Susun silabus pertemuan, metode belajar, dan brief tugas lapangan."],
                 jurnal: ["Jurnal Mengajar Lapangan", "Dokumentasi materi, lokasi praktik, peralatan, dan catatan evaluasi sesi."],
-                materi: ["Kelola Materi E-Course", "Terbitkan modul pembelajaran Video, E-Book PDF A4, dan Cheatsheet."],
+                materi: ["Kelola Materi E-Course", "Terbitkan dan filter modul pembelajaran Video, E-Book PDF A4, dan Cheatsheet."],
                 rekap: ["Rekap Nilai Akhir & Predikat", "Akumulasi otomatis 20% Kehadiran + 80% Nilai Karya Rubrik."],
                 cetak: ["Cetak Raport & Rekap Resmi (A4)", "Pratinjau dokumen dengan kop surat dinamis sesuai unit sekolah."],
                 arsip: ["Gudang Arsip Penilaian", "Karya yang diarsipkan pengajar (tetap tampil di portofolio siswa)."],
@@ -700,6 +804,7 @@
         // =====================================================================
         function renderOverview(container) {
             const approvedSiswa = db.siswa.filter(s => s.Status_Akun === "Approved" && matchSchoolAndGrade(s.Sekolah, s.Kelas));
+            const alumniCount = db.siswa.filter(s => s.Status_Akun === "Alumni").length;
             const pendingSiswa = db.siswa.filter(s => s.Status_Akun === "Pending");
             const activeTugas = db.tugas.filter(t => String(t.Archived).toUpperCase() !== "TRUE" && matchSchoolAndGrade(t.Sekolah, t.Kelas));
             const pendingTugas = activeTugas.filter(t => t.Status_Penilaian === "Belum Dinilai");
@@ -712,7 +817,7 @@
                         <div>
                             <p class="text-xs text-gray-400 font-semibold">Siswa Aktif</p>
                             <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">${approvedSiswa.length}</h3>
-                            <span class="text-[11px] text-brand-500 font-semibold">SMK: ${smkCount} • MA: ${maCount}</span>
+                            <span class="text-[11px] text-brand-400 font-semibold">SMK: ${smkCount} • MA: ${maCount} • Alumni: ${alumniCount}</span>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center border border-brand-500/20">
                             <i class="fa-solid fa-users text-xl"></i>
@@ -733,10 +838,10 @@
                     <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-5 rounded-2xl flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-400 font-semibold">Karya Belum Dinilai</p>
-                            <h3 class="text-2xl font-extrabold text-sky-500 mt-1">${pendingTugas.length}</h3>
+                            <h3 class="text-2xl font-extrabold text-brand-400 mt-1">${pendingTugas.length}</h3>
                             <span class="text-[11px] text-gray-500">Dari ${activeTugas.length} karya aktif</span>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center border border-brand-500/20">
                             <i class="fa-solid fa-camera text-xl"></i>
                         </div>
                     </div>
@@ -754,9 +859,9 @@
                 </div>
 
                 ${pendingSiswa.length > 0 ? `
-                    <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="p-5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold">
                                 <i class="fa-solid fa-shield-halved"></i>
                             </div>
                             <div>
@@ -764,7 +869,7 @@
                                 <p class="text-xs text-slate-600 dark:text-gray-300">Periksa identitas sekolah dan kelas mereka sebelum menyetujui akses masuk portal.</p>
                             </div>
                         </div>
-                        <button onclick="switchTab('siswa')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition whitespace-nowrap">
+                        <button onclick="switchTab('siswa')" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl whitespace-nowrap">
                             Verifikasi Sekarang
                         </button>
                     </div>
@@ -775,7 +880,7 @@
                     <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
                         <div class="flex justify-between items-center">
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Kiriman Foto Siswa Terbaru</h3>
-                            <button onclick="switchTab('grading')" class="text-xs text-brand-500 font-semibold hover:underline">Buka Penilaian</button>
+                            <button onclick="switchTab('grading')" class="text-xs text-brand-400 font-semibold hover:underline">Buka Penilaian</button>
                         </div>
                         <div class="space-y-3">
                             ${activeTugas.slice(0, 4).map(t => `
@@ -783,11 +888,11 @@
                                     <div class="flex items-center gap-3">
                                         <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 300)}" class="w-12 h-12 rounded-lg object-cover border border-darkborder cursor-pointer" onclick="openGradingModal('${t.ID_Tugas}')">
                                         <div>
-                                            <h4 class="text-xs font-bold text-slate-900 dark:text-white">${t.Judul_Tugas} <span class="text-[10px] text-brand-500">(v${t.Versi || 1})</span></h4>
+                                            <h4 class="text-xs font-bold text-slate-900 dark:text-white">${t.Judul_Tugas} <span class="text-[10px] text-brand-400">(v${t.Versi || 1})</span></h4>
                                             <p class="text-[11px] text-gray-500">${t.Nama_Siswa} • ${t.Kelas} (${t.Sekolah})</p>
                                         </div>
                                     </div>
-                                    <button onclick="openGradingModal('${t.ID_Tugas}')" class="px-3 py-1.5 rounded-lg text-[10px] font-bold ${t.Status_Penilaian === 'Sudah Dinilai' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-brand-500 text-white'}">
+                                    <button onclick="openGradingModal('${t.ID_Tugas}')" class="btn-smooth px-3 py-1.5 rounded-lg text-[10px] font-bold ${t.Status_Penilaian === 'Sudah Dinilai' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-brand-600 text-white'}">
                                         ${t.Status_Penilaian === 'Sudah Dinilai' ? 'Nilai: ' + t.Nilai_Akhir_Karya : 'Nilai Sekarang'}
                                     </button>
                                 </div>
@@ -799,23 +904,23 @@
                     <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Aksi Cepat Operasional Ekskul</h3>
                         <div class="grid grid-cols-2 gap-3">
-                            <button onclick="switchTab('qr-presensi')" class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left transition space-y-1.5">
+                            <button onclick="switchTab('qr-presensi')" class="btn-smooth p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left space-y-1.5">
                                 <i class="fa-solid fa-qrcode text-brand-500 text-xl"></i>
                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white">Buka Absensi QR</h4>
                                 <p class="text-[10px] text-gray-500">Scan kartu murid atau tampilkan QR sesi.</p>
                             </button>
-                            <button onclick="switchTab('perencanaan')" class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left transition space-y-1.5">
-                                <i class="fa-solid fa-bullseye text-emerald-500 text-xl"></i>
+                            <button onclick="switchTab('perencanaan')" class="btn-smooth p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left space-y-1.5">
+                                <i class="fa-solid fa-bullseye text-brand-500 text-xl"></i>
                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white">Buat Misi / Tugas</h4>
                                 <p class="text-[10px] text-gray-500">Publish brief tugas ke Papan Misi siswa.</p>
                             </button>
-                            <button onclick="switchTab('jurnal')" class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left transition space-y-1.5">
-                                <i class="fa-solid fa-pen-nib text-sky-500 text-xl"></i>
+                            <button onclick="switchTab('jurnal')" class="btn-smooth p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left space-y-1.5">
+                                <i class="fa-solid fa-pen-nib text-brand-500 text-xl"></i>
                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white">Isi Jurnal Sesi</h4>
                                 <p class="text-[10px] text-gray-500">Catat materi, alat & evaluasi pertemuan.</p>
                             </button>
-                            <button onclick="switchTab('cetak')" class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left transition space-y-1.5">
-                                <i class="fa-solid fa-print text-purple-500 text-xl"></i>
+                            <button onclick="switchTab('cetak')" class="btn-smooth p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder hover:border-brand-500 text-left space-y-1.5">
+                                <i class="fa-solid fa-print text-brand-500 text-xl"></i>
                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cetak Raport A4</h4>
                                 <p class="text-[10px] text-gray-500">Rekap nilai akhir lengkap dengan kop surat.</p>
                             </button>
@@ -826,11 +931,13 @@
         }
 
         // =====================================================================
-        // 5. MANAJEMEN SISWA, APPROVAL & KENAIKAN KELAS MASSAL
+        // 5. MANAJEMEN SISWA, APPROVAL, KENAIKAN KELAS + UNDO & ALUMNI
         // =====================================================================
         function renderSiswaManager(container) {
             const pendingList = db.siswa.filter(s => s.Status_Akun === "Pending");
             const activeList = db.siswa.filter(s => s.Status_Akun === "Approved" && matchSchoolAndGrade(s.Sekolah, s.Kelas));
+            const alumniList = db.siswa.filter(s => s.Status_Akun === "Alumni" && (globalSchoolFilter === "ALL" || String(s.Sekolah).toUpperCase().includes(globalSchoolFilter.includes("SMK") ? "SMK" : "MA")));
+            const hasUndoSnapshot = Boolean(localStorage.getItem(PROMOTE_UNDO_KEY));
 
             container.innerHTML = `
                 <!-- Antrean Approval -->
@@ -838,7 +945,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <i class="fa-solid fa-user-check text-amber-500"></i> Pendaftar Baru Menunggu Persetujuan (${pendingList.length})
+                                <i class="fa-solid fa-user-check text-brand-500"></i> Pendaftar Baru Menunggu Persetujuan (${pendingList.length})
                             </h3>
                             <p class="text-xs text-gray-500">Siswa baru tidak bisa masuk portal sebelum kamu klik Setujui.</p>
                         </div>
@@ -847,20 +954,20 @@
                     ${pendingList.length > 0 ? `
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             ${pendingList.map(s => `
-                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-amber-500/40 flex flex-col justify-between gap-3">
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-brand-500/40 flex flex-col justify-between gap-3">
                                     <div class="flex items-center gap-3">
-                                        <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 200) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-12 h-12 rounded-xl object-cover border border-darkborder">
+                                        <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 200) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=2563eb&color=fff'}" class="w-12 h-12 rounded-xl object-cover border border-darkborder">
                                         <div>
                                             <h4 class="text-xs font-bold text-slate-900 dark:text-white">${s.Nama_Lengkap} (${s.Nama_Panggilan || '-'})</h4>
-                                            <p class="text-[11px] text-brand-500 font-semibold">${s.Sekolah}</p>
+                                            <p class="text-[11px] text-brand-400 font-semibold">${s.Sekolah}</p>
                                             <p class="text-[10px] text-gray-500">Kelas: ${s.Kelas} ${s.Jurusan && s.Jurusan !== '-' ? '• ' + s.Jurusan : ''}</p>
                                         </div>
                                     </div>
                                     <div class="flex gap-2 pt-2 border-t border-slate-200 dark:border-darkborder">
-                                        <button onclick="approveStudentAction('${s.ID_Siswa}', true)" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition">
+                                        <button onclick="approveStudentAction('${s.ID_Siswa}', true)" class="btn-smooth flex-1 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-lg">
                                             <i class="fa-solid fa-check mr-1"></i> Setujui
                                         </button>
-                                        <button onclick="approveStudentAction('${s.ID_Siswa}', false)" class="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-500 text-xs font-bold rounded-lg transition">
+                                        <button onclick="approveStudentAction('${s.ID_Siswa}', false)" class="btn-smooth px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-500 text-xs font-bold rounded-lg">
                                             Tolak
                                         </button>
                                     </div>
@@ -870,81 +977,247 @@
                     ` : '<p class="text-xs text-gray-500 italic">Tidak ada antrean pendaftar baru saat ini.</p>'}
                 </div>
 
-                <!-- Daftar Siswa Aktif & Naik Kelas Massal -->
+                <!-- Switcher Siswa Aktif vs Alumni & Kontrol Kenaikan Kelas -->
                 <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Daftar Anggota Ekskul Aktif (${activeList.length})</h3>
-                            <p class="text-xs text-gray-500">Terfilter sesuai sekolah & angkatan pada header atas.</p>
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-darkborder">
+                        <!-- Tab Switcher Aktif vs Alumni -->
+                        <div class="flex items-center gap-2 bg-slate-100 dark:bg-obsidian p-1 rounded-xl border border-slate-200 dark:border-darkborder w-fit">
+                            <button onclick="siswaSubTab='active'; renderCurrentTab()" class="btn-smooth px-3.5 py-1.5 rounded-lg text-xs font-bold ${siswaSubTab === 'active' ? 'bg-brand-600 text-white shadow' : 'text-gray-500 hover:text-slate-900 dark:hover:text-white'}">
+                                <i class="fa-solid fa-user-graduate mr-1"></i> Siswa Aktif (${activeList.length})
+                            </button>
+                            <button onclick="siswaSubTab='alumni'; renderCurrentTab()" class="btn-smooth px-3.5 py-1.5 rounded-lg text-xs font-bold ${siswaSubTab === 'alumni' ? 'bg-brand-600 text-white shadow' : 'text-gray-500 hover:text-slate-900 dark:hover:text-white'}">
+                                <i class="fa-solid fa-user-tie mr-1"></i> Data Alumni (${alumniList.length})
+                            </button>
                         </div>
-                        <button onclick="triggerBulkPromote()" class="px-4 py-2 bg-brand-500/15 hover:bg-brand-500/25 text-brand-500 border border-brand-500/30 rounded-xl text-xs font-bold transition flex items-center gap-2">
-                            <i class="fa-solid fa-angles-up"></i> Naikkan Tingkat Kelas Massal (X→XI, XI→XII)
-                        </button>
+
+                        <!-- Tombol Kenaikan Kelas Massal & Kembalikan (Undo) -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            ${hasUndoSnapshot ? `
+                                <button onclick="undoBulkPromote()" class="btn-smooth px-3.5 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5" title="Kembalikan posisi kelas & status alumni seperti sebelum tombol Naikkan Kelas ditekan">
+                                    <i class="fa-solid fa-rotate-left"></i> Kembalikan Kenaikan Kelas (Undo)
+                                </button>
+                            ` : ''}
+                            <button onclick="triggerBulkPromoteWithAlumni()" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-brand-600/20 flex items-center gap-2">
+                                <i class="fa-solid fa-angles-up"></i> Naikkan Kelas Massal (X→XI, XI→XII, XII→Alumni)
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100 dark:bg-obsidian text-gray-500 uppercase border-b border-slate-200 dark:border-darkborder">
-                                <tr>
-                                    <th class="px-3 py-3">Siswa</th>
-                                    <th class="px-3 py-3">Sekolah</th>
-                                    <th class="px-3 py-3">Kelas & Jurusan</th>
-                                    <th class="px-3 py-3">ID Anggota</th>
-                                    <th class="px-3 py-3 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-darkborder">
-                                ${activeList.map(s => `
-                                    <tr class="hover:bg-slate-50 dark:hover:bg-obsidian/60">
-                                        <td class="px-3 py-3 flex items-center gap-2.5">
-                                            <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 150) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=ff6b00&color=fff'}" class="w-8 h-8 rounded-lg object-cover">
-                                            <div>
-                                                <span class="font-bold text-slate-900 dark:text-white block">${s.Nama_Lengkap}</span>
-                                                <span class="text-[10px] text-gray-500">${s.Email}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-3 font-semibold text-brand-500">${s.Sekolah}</td>
-                                        <td class="px-3 py-3">${s.Kelas} ${s.Jurusan && s.Jurusan !== '-' ? '(' + s.Jurusan + ')' : ''}</td>
-                                        <td class="px-3 py-3 font-mono text-[11px] text-gray-500">${s.ID_Siswa}</td>
-                                        <td class="px-3 py-3 text-center">
-                                            <button onclick="deleteStudentAction('${s.ID_Siswa}')" class="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg" title="Hapus Siswa">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </td>
+                    ${siswaSubTab === 'active' ? `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 dark:bg-obsidian text-gray-500 uppercase border-b border-slate-200 dark:border-darkborder">
+                                    <tr>
+                                        <th class="px-3 py-3">Siswa</th>
+                                        <th class="px-3 py-3">Sekolah</th>
+                                        <th class="px-3 py-3">Kelas & Jurusan</th>
+                                        <th class="px-3 py-3">ID Anggota</th>
+                                        <th class="px-3 py-3 text-center">Aksi</th>
                                     </tr>
-                                `).join('') || '<tr><td colspan="5" class="py-6 text-center text-gray-500">Belum ada siswa aktif sesuai filter.</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-darkborder">
+                                    ${activeList.map(s => `
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-obsidian/60">
+                                            <td class="px-3 py-3 flex items-center gap-2.5">
+                                                <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 150) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=2563eb&color=fff'}" class="w-8 h-8 rounded-lg object-cover">
+                                                <div>
+                                                    <span class="font-bold text-slate-900 dark:text-white block">${s.Nama_Lengkap}</span>
+                                                    <span class="text-[10px] text-gray-500">${s.Email}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-3 font-semibold text-brand-400">${s.Sekolah}</td>
+                                            <td class="px-3 py-3 font-bold">${s.Kelas} ${s.Jurusan && s.Jurusan !== '-' ? '(' + s.Jurusan + ')' : ''}</td>
+                                            <td class="px-3 py-3 font-mono text-[11px] text-gray-500">${s.ID_Siswa}</td>
+                                            <td class="px-3 py-3 text-center">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <button onclick="setStudentAlumniStatus('${s.ID_Siswa}', true)" class="btn-smooth px-2.5 py-1 bg-brand-600/15 hover:bg-brand-600 text-brand-400 hover:text-white rounded-lg text-[10px] font-bold" title="Jadikan Alumni">
+                                                        Jadikan Alumni
+                                                    </button>
+                                                    <button onclick="deleteStudentAction('${s.ID_Siswa}')" class="btn-smooth p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg" title="Hapus Siswa">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="5" class="py-6 text-center text-gray-500">Belum ada siswa aktif sesuai filter.</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div class="space-y-3">
+                            <div class="p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 text-xs text-gray-400">
+                                <i class="fa-solid fa-circle-info text-brand-400 mr-1"></i> Siswa yang lulus dari kelas XII otomatis masuk daftar <strong>Alumni</strong> dan tidak lagi tercatat dalam absensi maupun rekap rapor aktif.
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-100 dark:bg-obsidian text-gray-500 uppercase border-b border-slate-200 dark:border-darkborder">
+                                        <tr>
+                                            <th class="px-3 py-3">Nama Alumni</th>
+                                            <th class="px-3 py-3">Asal Sekolah</th>
+                                            <th class="px-3 py-3">Kelas Terakhir</th>
+                                            <th class="px-3 py-3">Status</th>
+                                            <th class="px-3 py-3 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 dark:divide-darkborder">
+                                        ${alumniList.map(s => `
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-obsidian/60">
+                                                <td class="px-3 py-3 flex items-center gap-2.5">
+                                                    <img loading="lazy" src="${optimizeDriveImg(s.Foto_Profil_URL, 150) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(s.Nama_Lengkap) + '&background=2563eb&color=fff'}" class="w-8 h-8 rounded-lg object-cover">
+                                                    <div>
+                                                        <span class="font-bold text-slate-900 dark:text-white block">${s.Nama_Lengkap}</span>
+                                                        <span class="text-[10px] text-gray-500">${s.Email}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-3 font-semibold text-brand-400">${s.Sekolah}</td>
+                                                <td class="px-3 py-3">${s.Kelas} ${s.Jurusan && s.Jurusan !== '-' ? '(' + s.Jurusan + ')' : ''}</td>
+                                                <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 font-bold text-[10px]">ALUMNI</span></td>
+                                                <td class="px-3 py-3 text-center">
+                                                    <button onclick="setStudentAlumniStatus('${s.ID_Siswa}', false)" class="btn-smooth px-2.5 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[10px] font-bold">
+                                                        Aktifkan Kembali
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="5" class="py-6 text-center text-gray-500">Belum ada data alumni.</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `}
                 </div>
             `;
         }
 
         async function approveStudentAction(idSiswa, approve) {
-            const res = await callGAS({ action: "approveStudent", idSiswa, approve }, true, approve ? "Menyetujui akun siswa..." : "Menolak pendaftaran...");
-            if (res.status === "ok") {
-                showToast(res.message);
-                await syncDatabase(false, true);
+            // Optimistic UI Update
+            const target = db.siswa.find(s => String(s.ID_Siswa) === String(idSiswa));
+            if (target) {
+                target.Status_Akun = approve ? "Approved" : "Rejected";
+                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+                renderCurrentTab();
+                showToast(approve ? "Siswa disetujui!" : "Pendaftaran ditolak.");
             }
+            setRealtimeIndicator(true);
+            await callGAS({ action: "approveStudent", idSiswa, approve }, false);
+            syncDatabase(false, true);
         }
 
-        async function triggerBulkPromote() {
-            const targetSchool = globalSchoolFilter === "ALL" ? "Semua" : globalSchoolFilter;
-            if (!confirm(`Jalankan kenaikan kelas otomatis (X -> XI, XI -> XII) untuk unit: ${targetSchool}?`)) return;
-            const res = await callGAS({ action: "bulkPromoteClass", sekolah: targetSchool }, true, "Memproses kenaikan kelas massal...");
-            if (res.status === "ok") {
-                showToast(res.message);
-                await syncDatabase(false, true);
+        async function setStudentAlumniStatus(idSiswa, toAlumni) {
+            const target = db.siswa.find(s => String(s.ID_Siswa) === String(idSiswa));
+            if (!target) return;
+            target.Status_Akun = toAlumni ? "Alumni" : "Approved";
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast(toAlumni ? `${target.Nama_Lengkap} dipindahkan ke Alumni.` : `${target.Nama_Lengkap} diaktifkan kembali.`);
+
+            setRealtimeIndicator(true);
+            await callGAS({
+                action: "saveSiswaState",
+                items: [{ ID_Siswa: target.ID_Siswa, Kelas: target.Kelas, Status_Akun: target.Status_Akun }]
+            }, false);
+            // Fallback jika backend memakai endpoint updateStudentProfile/approveStudent
+            if (!toAlumni) {
+                await callGAS({ action: "approveStudent", idSiswa: target.ID_Siswa, approve: true }, false);
             }
+            setRealtimeIndicator(false);
+        }
+
+        async function triggerBulkPromoteWithAlumni() {
+            const targetSchool = globalSchoolFilter === "ALL" ? "Semua Sekolah" : globalSchoolFilter;
+            if (!confirm(`Jalankan kenaikan kelas massal untuk ${targetSchool}?\n• Kelas X -> Kelas XI\n• Kelas XI -> Kelas XII\n• Kelas XII -> Status ALUMNI (keluar dari daftar siswa aktif)`)) return;
+
+            // Simpan snapshot sebelum diubah untuk tombol Undo
+            const snapshot = db.siswa.map(s => ({
+                ID_Siswa: s.ID_Siswa,
+                Kelas: s.Kelas,
+                Status_Akun: s.Status_Akun
+            }));
+            localStorage.setItem(PROMOTE_UNDO_KEY, JSON.stringify(snapshot));
+
+            const changedStudents = [];
+            db.siswa.forEach(s => {
+                if (s.Status_Akun !== "Approved") return;
+                if (globalSchoolFilter !== "ALL") {
+                    const matchS = globalSchoolFilter.includes("SMK")
+                        ? String(s.Sekolah).toUpperCase().includes("SMK")
+                        : String(s.Sekolah).toUpperCase().includes("MA");
+                    if (!matchS) return;
+                }
+
+                const kls = String(s.Kelas || "").trim();
+                const upper = kls.toUpperCase();
+                if (upper.startsWith("XII")) {
+                    s.Status_Akun = "Alumni";
+                    changedStudents.push({ ID_Siswa: s.ID_Siswa, Kelas: s.Kelas, Status_Akun: "Alumni", toAlumni: true });
+                } else if (upper.startsWith("XI")) {
+                    s.Kelas = kls.replace(/^XI/i, "XII");
+                    changedStudents.push({ ID_Siswa: s.ID_Siswa, Kelas: s.Kelas, Status_Akun: "Approved" });
+                } else if (upper.startsWith("X")) {
+                    s.Kelas = kls.replace(/^X/i, "XI");
+                    changedStudents.push({ ID_Siswa: s.ID_Siswa, Kelas: s.Kelas, Status_Akun: "Approved" });
+                }
+            });
+
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast(`Kenaikan kelas massal berhasil (${changedStudents.length} siswa diperbarui)!`);
+
+            // Sinkronkan perubahan ke Google Sheets di latar belakang
+            setRealtimeIndicator(true);
+            await Promise.all(changedStudents.map(st => {
+                if (st.toAlumni) {
+                    return callGAS({ action: "deleteStudent", idSiswa: st.ID_Siswa, keepAsAlumni: true }, false);
+                }
+                return callGAS({ action: "updateStudentProfile", idSiswa: st.ID_Siswa, kelas: st.Kelas }, false);
+            }));
+            setRealtimeIndicator(false);
+        }
+
+        async function undoBulkPromote() {
+            const rawSnap = localStorage.getItem(PROMOTE_UNDO_KEY);
+            if (!rawSnap) return;
+            if (!confirm("Kembalikan posisi kelas dan status Alumni ke kondisi sebelum kenaikan kelas massal?")) return;
+
+            const snapshot = JSON.parse(rawSnap);
+            const snapMap = {};
+            snapshot.forEach(item => { snapMap[String(item.ID_Siswa)] = item; });
+
+            const restoredItems = [];
+            db.siswa.forEach(s => {
+                const prev = snapMap[String(s.ID_Siswa)];
+                if (prev && (s.Kelas !== prev.Kelas || s.Status_Akun !== prev.Status_Akun)) {
+                    s.Kelas = prev.Kelas;
+                    s.Status_Akun = prev.Status_Akun;
+                    restoredItems.push(prev);
+                }
+            });
+
+            localStorage.removeItem(PROMOTE_UNDO_KEY);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Posisi kelas & status siswa berhasil dikembalikan seperti semula!");
+
+            setRealtimeIndicator(true);
+            await Promise.all(restoredItems.map(async (st) => {
+                await callGAS({ action: "updateStudentProfile", idSiswa: st.ID_Siswa, kelas: st.Kelas }, false);
+                if (st.Status_Akun === "Approved") {
+                    await callGAS({ action: "approveStudent", idSiswa: st.ID_Siswa, approve: true }, false);
+                }
+            }));
+            setRealtimeIndicator(false);
         }
 
         async function deleteStudentAction(idSiswa) {
             if (!confirm("Hapus permanen data siswa ini dari database?")) return;
-            const res = await callGAS({ action: "deleteStudent", idSiswa }, true, "Menghapus data siswa...");
-            if (res.status === "ok") {
-                showToast("Siswa dihapus.");
-                await syncDatabase(false, true);
-            }
+            db.siswa = db.siswa.filter(s => String(s.ID_Siswa) !== String(idSiswa));
+            db.presensi = db.presensi.filter(p => String(p.ID_Siswa) !== String(idSiswa));
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Data siswa dihapus.");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "deleteStudent", idSiswa }, false);
+            setRealtimeIndicator(false);
         }
 
         // =====================================================================
@@ -971,10 +1244,10 @@
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-darkborder">
                         <div class="flex flex-wrap items-center gap-2">
                             ${!isArchiveView ? `
-                                <button onclick="gradingStatusFilter='all'; renderCurrentTab()" class="px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'all' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Semua</button>
-                                <button onclick="gradingStatusFilter='pending'; renderCurrentTab()" class="px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'pending' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-obsidian text-brand-500'}">Belum Dinilai</button>
-                                <button onclick="gradingStatusFilter='graded'; renderCurrentTab()" class="px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'graded' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-emerald-500'}">Sudah Dinilai</button>
-                                <button onclick="gradingStatusFilter='revisi'; renderCurrentTab()" class="px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'revisi' ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-amber-500'}">Perlu Revisi</button>
+                                <button onclick="gradingStatusFilter='all'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'all' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Semua</button>
+                                <button onclick="gradingStatusFilter='pending'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'pending' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-brand-400'}">Belum Dinilai</button>
+                                <button onclick="gradingStatusFilter='graded'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'graded' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-emerald-500'}">Sudah Dinilai</button>
+                                <button onclick="gradingStatusFilter='revisi'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-xl text-xs font-bold ${gradingStatusFilter === 'revisi' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-amber-500'}">Perlu Revisi</button>
                             ` : `<span class="text-xs font-bold text-gray-400">Menampilkan ${filtered.length} karya diarsipkan</span>`}
                         </div>
 
@@ -995,7 +1268,7 @@
                                     <div>
                                         <div class="relative h-52 bg-black overflow-hidden">
                                             <img loading="lazy" src="${optimizeDriveImg(t.Foto_URL, 600)}" class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition duration-300" onclick="openGradingModal('${t.ID_Tugas}')">
-                                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white ${t.Status_Penilaian === 'Sudah Dinilai' ? 'bg-emerald-600' : 'bg-brand-500'}">
+                                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white ${t.Status_Penilaian === 'Sudah Dinilai' ? 'bg-emerald-600' : 'bg-brand-600'}">
                                                 ${t.Status_Penilaian === 'Sudah Dinilai' ? 'Nilai: ' + t.Nilai_Akhir_Karya : 'Belum Dinilai'}
                                             </span>
                                             <span class="absolute top-2.5 right-2.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-black/75 text-white border border-white/10">
@@ -1006,23 +1279,23 @@
 
                                         <div class="p-4 space-y-2">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isSMK ? 'bg-sky-500/15 text-sky-500' : 'bg-amber-500/15 text-amber-500'}">${t.Sekolah} • ${t.Kelas}</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isSMK ? 'bg-brand-500/15 text-brand-400' : 'bg-amber-500/15 text-amber-500'}">${t.Sekolah} • ${t.Kelas}</span>
                                                 <span class="text-[10px] text-gray-500">${t.Tanggal_Kirim}</span>
                                             </div>
                                             <h4 class="text-xs font-extrabold text-slate-900 dark:text-white">${t.Nama_Siswa}</h4>
-                                            <p class="text-xs font-semibold text-brand-500">${t.Judul_Tugas}</p>
+                                            <p class="text-xs font-semibold text-brand-400">${t.Judul_Tugas}</p>
                                             <p class="text-[11px] text-gray-500 line-clamp-2 italic">"${t.Deskripsi}"</p>
                                         </div>
                                     </div>
 
                                     <div class="p-3 bg-white dark:bg-darkcard border-t border-slate-200 dark:border-darkborder flex items-center justify-between gap-2">
-                                        <button onclick="openGradingModal('${t.ID_Tugas}')" class="flex-1 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition">
+                                        <button onclick="openGradingModal('${t.ID_Tugas}')" class="btn-smooth flex-1 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">
                                             <i class="fa-solid fa-sliders mr-1"></i> Nilai Rubrik
                                         </button>
-                                        <button onclick="toggleHallOfFrameAction('${t.ID_Tugas}')" title="Sematkan ke Hall of Frame Sekolah" class="p-2 rounded-xl border transition ${isPinned ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-100 dark:bg-obsidian text-gray-400 border-slate-200 dark:border-darkborder hover:text-amber-500'}">
+                                        <button onclick="toggleHallOfFrameAction('${t.ID_Tugas}')" title="Sematkan ke Hall of Frame Sekolah" class="btn-smooth p-2 rounded-xl border ${isPinned ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-100 dark:bg-obsidian text-gray-400 border-slate-200 dark:border-darkborder hover:text-brand-400'}">
                                             <i class="fa-solid fa-star"></i>
                                         </button>
-                                        <button onclick="toggleArchiveAction('${t.ID_Tugas}')" title="${isArchiveView ? 'Pulihkan dari Arsip' : 'Arsipkan'}" class="p-2 rounded-xl bg-slate-100 dark:bg-obsidian text-gray-400 border border-slate-200 dark:border-darkborder hover:text-brand-500">
+                                        <button onclick="toggleArchiveAction('${t.ID_Tugas}')" title="${isArchiveView ? 'Pulihkan dari Arsip' : 'Arsipkan'}" class="btn-smooth p-2 rounded-xl bg-slate-100 dark:bg-obsidian text-gray-400 border border-slate-200 dark:border-darkborder hover:text-brand-400">
                                             <i class="fa-solid ${isArchiveView ? 'fa-box-open' : 'fa-box-archive'}"></i>
                                         </button>
                                     </div>
@@ -1112,7 +1385,6 @@
             };
             closeGradingModal();
 
-            // Optimistic UI update
             const target = db.tugas.find(x => String(x.ID_Tugas) === String(currentGradingTaskId));
             if (target) {
                 target.Status_Penilaian = "Sudah Dinilai";
@@ -1125,19 +1397,15 @@
                 target.Perlu_Revisi = payload.perluRevisi ? "Ya" : "Tidak";
                 localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
                 renderCurrentTab();
+                showToast("Penilaian rubrik tersimpan!");
             }
 
-            setBackgroundSyncIndicator(true);
-            const res = await callGAS(payload, false);
-            setBackgroundSyncIndicator(false);
-            if (res.status === "ok") {
-                showToast("Penilaian rubrik tersimpan!");
-                syncDatabase(false, true);
-            }
+            setRealtimeIndicator(true);
+            await callGAS(payload, false);
+            setRealtimeIndicator(false);
         }
 
         async function toggleHallOfFrameAction(idTugas) {
-            // Optimistic UI update
             const target = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
             if (target) {
                 const next = String(target.Hall_Of_Frame).toUpperCase() === "TRUE" ? "FALSE" : "TRUE";
@@ -1146,13 +1414,12 @@
                 renderCurrentTab();
                 showToast(next === "TRUE" ? "Karya disematkan ke Hall of Frame!" : "Karya dilepas dari Hall of Frame.");
             }
-            setBackgroundSyncIndicator(true);
+            setRealtimeIndicator(true);
             await callGAS({ action: "toggleHallOfFrame", id: idTugas }, false);
-            setBackgroundSyncIndicator(false);
+            setRealtimeIndicator(false);
         }
 
         async function toggleArchiveAction(idTugas) {
-            // Optimistic UI update
             const target = db.tugas.find(x => String(x.ID_Tugas) === String(idTugas));
             if (target) {
                 target.Archived = String(target.Archived).toUpperCase() === "TRUE" ? "FALSE" : "TRUE";
@@ -1160,9 +1427,9 @@
                 renderCurrentTab();
                 showToast("Status arsip diperbarui!");
             }
-            setBackgroundSyncIndicator(true);
+            setRealtimeIndicator(true);
             await callGAS({ action: "toggleArchiveTugas", id: idTugas }, false);
-            setBackgroundSyncIndicator(false);
+            setRealtimeIndicator(false);
         }
 
         // =====================================================================
@@ -1179,27 +1446,29 @@
             const activePertemuan = db.settings.activeSessionPertemuan || pCols[0] || "P1";
             const activeToken = db.settings.activeSessionToken || "";
 
-            const filteredPresensi = db.presensi.filter(p => matchSchoolAndGrade(p.Sekolah, p.Kelas));
+            // Hanya tampilkan siswa aktif (bukan Alumni) di matriks presensi
+            const activeIds = new Set(db.siswa.filter(s => s.Status_Akun === "Approved").map(s => String(s.ID_Siswa)));
+            const filteredPresensi = db.presensi.filter(p => activeIds.has(String(p.ID_Siswa)) && matchSchoolAndGrade(p.Sekolah, p.Kelas));
 
             container.innerHTML = `
                 <!-- Panel Kontrol QR Dua Arah -->
                 <div class="bg-white dark:bg-darkcard border border-brand-500/30 p-6 rounded-2xl space-y-5">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-darkborder pb-4">
                         <div>
-                            <span class="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest">SISTEM ABSENSI QR DUA ARAH</span>
+                            <span class="text-[10px] font-extrabold text-brand-400 uppercase tracking-widest">SISTEM ABSENSI QR DUA ARAH</span>
                             <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Pilih Metode Scan Pertemuan</h3>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
                             <label class="text-xs font-semibold text-gray-400">Sesi Aktif:</label>
-                            <select id="qr-target-pertemuan" class="px-3 py-2 bg-slate-100 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl text-xs font-bold text-brand-500">
+                            <select id="qr-target-pertemuan" class="px-3 py-2 bg-slate-100 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl text-xs font-bold text-brand-400">
                                 ${pCols.map(c => `<option value="${c}" ${c === activePertemuan ? 'selected' : ''}>Pertemuan ${c}</option>`).join('')}
                             </select>
 
-                            <button onclick="switchQRMode('teacher_scans_student')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${qrMode === 'teacher_scans_student' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-400'}">
+                            <button onclick="switchQRMode('teacher_scans_student')" class="btn-smooth px-3.5 py-2 rounded-xl text-xs font-bold ${qrMode === 'teacher_scans_student' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-400'}">
                                 <i class="fa-solid fa-camera mr-1"></i> Mode 1: Pengajar Scan Murid
                             </button>
-                            <button onclick="switchQRMode('student_scans_teacher')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${qrMode === 'student_scans_teacher' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-400'}">
+                            <button onclick="switchQRMode('student_scans_teacher')" class="btn-smooth px-3.5 py-2 rounded-xl text-xs font-bold ${qrMode === 'student_scans_teacher' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-400'}">
                                 <i class="fa-solid fa-qrcode mr-1"></i> Mode 2: Murid Scan QR Pengajar
                             </button>
                         </div>
@@ -1213,10 +1482,10 @@
                                     Arahkan kamera HP/Laptop ke <strong>Digital Member Card</strong> di layar HP murid. Sistem otomatis mencatat status <strong>H (Hadir)</strong> pada kolom pertemuan yang dipilih.
                                 </p>
                                 <div class="flex gap-2">
-                                    <button onclick="startAdminQRScanner()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition">
+                                    <button onclick="startAdminQRScanner()" class="btn-smooth px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">
                                         <i class="fa-solid fa-play mr-1"></i> Aktifkan Kamera Scanner
                                     </button>
-                                    <button onclick="stopQRScanner()" class="px-4 py-2.5 bg-slate-200 dark:bg-obsidian text-gray-400 text-xs font-bold rounded-xl">
+                                    <button onclick="stopQRScanner()" class="btn-smooth px-4 py-2.5 bg-slate-200 dark:bg-obsidian text-gray-400 text-xs font-bold rounded-xl">
                                         Matikan Kamera
                                     </button>
                                 </div>
@@ -1232,7 +1501,7 @@
                                 <p class="text-xs text-gray-400 leading-relaxed">
                                     Klik tombol di bawah untuk membuat token QR sesi pertemuan (berlaku 30 menit). Murid cukup menekan tombol <strong>"Scan Absen Hari Ini"</strong> di portal mereka.
                                 </p>
-                                <button onclick="generateSessionQRForStudents()" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 transition">
+                                <button onclick="generateSessionQRForStudents()" class="btn-smooth px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20">
                                     <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate / Perbarui QR Sesi Sekarang
                                 </button>
                             </div>
@@ -1251,11 +1520,11 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Matriks Presensi Pertemuan</h3>
-                            <p class="text-xs text-gray-500">Klik sel untuk mengubah instan: <strong>-</strong> / <strong class="text-emerald-500">H</strong> / <strong class="text-sky-500">I</strong> / <strong class="text-amber-500">S</strong> / <strong class="text-red-500">A</strong></p>
+                            <p class="text-xs text-gray-500">Klik sel untuk mengubah instan: <strong>-</strong> / <strong class="text-emerald-500">H</strong> / <strong class="text-brand-400">I</strong> / <strong class="text-amber-500">S</strong> / <strong class="text-red-500">A</strong></p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="manageMeetingCol('add')" class="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl">+ Kolom Pertemuan</button>
-                            <button onclick="manageMeetingCol('remove')" class="px-3 py-1.5 bg-red-500/15 text-red-500 text-xs font-bold rounded-xl">- Hapus Kolom Akhir</button>
+                            <button onclick="manageMeetingCol('add')" class="btn-smooth px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">+ Kolom Pertemuan</button>
+                            <button onclick="manageMeetingCol('remove')" class="btn-smooth px-3 py-1.5 bg-red-500/15 text-red-500 text-xs font-bold rounded-xl">- Hapus Kolom Akhir</button>
                         </div>
                     </div>
 
@@ -1277,11 +1546,11 @@
                                         const val = row[c] || "-";
                                         if (val !== "-") { valid++; if (val === "H") hadir++; }
                                         const badge = val === "H" ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/40"
-                                            : val === "I" ? "bg-sky-500/20 text-sky-500 border-sky-500/40"
+                                            : val === "I" ? "bg-brand-500/20 text-brand-400 border-brand-500/40"
                                             : val === "S" ? "bg-amber-500/20 text-amber-500 border-amber-500/40"
                                             : val === "A" ? "bg-red-500/20 text-red-500 border-red-500/40"
                                             : "bg-slate-100 dark:bg-obsidian text-gray-500 border-slate-300 dark:border-darkborder";
-                                        return `<td class="px-1 py-2 text-center"><button onclick="cyclePresensiCell('${row.ID_Siswa}', '${c}', '${val}')" class="w-7 h-7 rounded-lg font-extrabold border ${badge}">${val}</button></td>`;
+                                        return `<td class="px-1 py-2 text-center"><button onclick="cyclePresensiCell('${row.ID_Siswa}', '${c}', '${val}')" class="btn-smooth w-7 h-7 rounded-lg font-extrabold border ${badge}">${val}</button></td>`;
                                     }).join('');
                                     const pct = valid > 0 ? Math.round((hadir / valid) * 100) : 0;
                                     return `
@@ -1293,7 +1562,7 @@
                                             <td class="px-3 py-2 text-center font-extrabold ${pct >= 80 ? 'text-emerald-500' : 'text-amber-500'}">${pct}%</td>
                                         </tr>
                                     `;
-                                }).join('') || '<tr><td colspan="16" class="py-6 text-center text-gray-500">Belum ada data presensi siswa sesuai filter.</td></tr>'}
+                                }).join('') || '<tr><td colspan="16" class="py-6 text-center text-gray-500">Belum ada data presensi siswa aktif sesuai filter.</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -1313,7 +1582,7 @@
             localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
             renderCurrentTab();
 
-            setBackgroundSyncIndicator(true);
+            setRealtimeIndicator(true);
             await callGAS({
                 action: "setQRSessionConfig",
                 qrMode: newMode,
@@ -1321,7 +1590,7 @@
                 activeSessionToken: db.settings.activeSessionToken || "",
                 activeSessionExpiry: db.settings.activeSessionExpiry || ""
             }, false);
-            setBackgroundSyncIndicator(false);
+            setRealtimeIndicator(false);
         }
 
         async function generateSessionQRForStudents() {
@@ -1329,24 +1598,24 @@
             const token = "SESI-" + pertemuan + "-" + Math.floor(100000 + Math.random() * 900000);
             const expiry = new Date(Date.now() + 30 * 60000).toISOString();
 
-            const res = await callGAS({
+            db.settings.qrMode = "student_scans_teacher";
+            db.settings.activeSessionToken = token;
+            db.settings.activeSessionPertemuan = pertemuan;
+            db.settings.activeSessionExpiry = expiry;
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("QR Sesi aktif selama 30 menit!");
+
+            setRealtimeIndicator(true);
+            await callGAS({
                 action: "setQRSessionConfig",
                 qrMode: "student_scans_teacher",
                 activeSessionToken: token,
                 activeSessionPertemuan: pertemuan,
                 activeSessionSekolah: globalSchoolFilter,
                 activeSessionExpiry: expiry
-            }, true, "Mengaktifkan QR Code sesi pertemuan...");
-
-            if (res.status === "ok") {
-                db.settings.qrMode = "student_scans_teacher";
-                db.settings.activeSessionToken = token;
-                db.settings.activeSessionPertemuan = pertemuan;
-                db.settings.activeSessionExpiry = expiry;
-                localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
-                showToast("QR Sesi aktif selama 30 menit!");
-                renderCurrentTab();
-            }
+            }, false);
+            setRealtimeIndicator(false);
         }
 
         function renderSessionQRCanvas(token, pertemuan) {
@@ -1372,19 +1641,22 @@
                     } catch (e) {}
 
                     const pertemuanKey = document.getElementById("qr-target-pertemuan").value;
-                    const res = await callGAS({
+                    const row = db.presensi.find(r => String(r.ID_Siswa) === String(idSiswa));
+                    if (row) {
+                        row[pertemuanKey] = "H";
+                        localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+                        renderCurrentTab();
+                        showToast(`Hadir tercatat: ${row.Nama_Lengkap} (${pertemuanKey})`);
+                    }
+
+                    setRealtimeIndicator(true);
+                    await callGAS({
                         action: "scanAbsensiQR",
                         scanType: "teacher_scans_student",
                         idSiswa: idSiswa,
                         pertemuanKey: pertemuanKey
-                    }, true, "Mencatat kehadiran siswa...");
-
-                    if (res.status === "ok") {
-                        showToast(res.message);
-                        await syncDatabase(false, true);
-                    } else {
-                        showToast(res.message, "error");
-                    }
+                    }, false);
+                    setRealtimeIndicator(false);
                 },
                 () => {}
             ).catch(err => showToast("Gagal membuka kamera: " + err, "error"));
@@ -1407,14 +1679,15 @@
             }
             renderCurrentTab();
 
-            setBackgroundSyncIndicator(true);
+            setRealtimeIndicator(true);
             await callGAS({ action: "updatePresensiCell", idSiswa, pertemuanKey, status: nextVal }, false);
-            setBackgroundSyncIndicator(false);
+            setRealtimeIndicator(false);
         }
 
         async function manageMeetingCol(mode) {
             if (mode === "remove" && !confirm("Hapus kolom pertemuan terakhir?")) return;
-            const res = await callGAS({ action: "managePertemuanColumn", mode }, true, "Memperbarui kolom pertemuan...");
+            setRealtimeIndicator(true);
+            const res = await callGAS({ action: "managePertemuanColumn", mode }, false);
             if (res.status === "ok") await syncDatabase(true, true);
         }
 
@@ -1432,11 +1705,11 @@
                 <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-center gap-2 bg-slate-100 dark:bg-obsidian p-1 rounded-xl border border-slate-200 dark:border-darkborder w-fit">
-                            <button onclick="rencanaViewMode='list'; renderCurrentTab()" class="px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'list' ? 'bg-brand-500 text-white' : 'text-gray-500'}">List</button>
-                            <button onclick="rencanaViewMode='tabel'; renderCurrentTab()" class="px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'tabel' ? 'bg-brand-500 text-white' : 'text-gray-500'}">Tabel</button>
-                            <button onclick="rencanaViewMode='roadmap'; renderCurrentTab()" class="px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'roadmap' ? 'bg-brand-500 text-white' : 'text-gray-500'}">Roadmap</button>
+                            <button onclick="rencanaViewMode='list'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'list' ? 'bg-brand-600 text-white' : 'text-gray-500'}">List</button>
+                            <button onclick="rencanaViewMode='tabel'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'tabel' ? 'bg-brand-600 text-white' : 'text-gray-500'}">Tabel</button>
+                            <button onclick="rencanaViewMode='roadmap'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rencanaViewMode === 'roadmap' ? 'bg-brand-600 text-white' : 'text-gray-500'}">Roadmap</button>
                         </div>
-                        <button onclick="openRencanaModal()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20">
+                        <button onclick="openRencanaModal()" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20">
                             <i class="fa-solid fa-plus mr-1"></i> Tambah Rencana & Brief Tugas
                         </button>
                     </div>
@@ -1458,14 +1731,14 @@
                                 <tbody class="divide-y divide-slate-200 dark:divide-darkborder">
                                     ${list.map(r => `
                                         <tr>
-                                            <td class="px-3 py-3 font-bold text-brand-500">${r.Pertemuan}</td>
+                                            <td class="px-3 py-3 font-bold text-brand-400">${r.Pertemuan}</td>
                                             <td class="px-3 py-3">${r.Tanggal}</td>
                                             <td class="px-3 py-3">${r.Sekolah}</td>
                                             <td class="px-3 py-3"><strong class="block text-slate-900 dark:text-white">${r.Topik}</strong><span class="text-[11px] text-gray-500">${r.Deskripsi || ''}</span></td>
                                             <td class="px-3 py-3">${r.Metode} • ${r.Lokasi}</td>
                                             <td class="px-3 py-3 text-amber-500 font-semibold">${r.Deadline_Tugas || '-'}</td>
                                             <td class="px-3 py-3 text-center">
-                                                <button onclick="openRencanaModal('${r.ID_Rencana}')" class="p-1.5 text-sky-500"><i class="fa-solid fa-pen"></i></button>
+                                                <button onclick="openRencanaModal('${r.ID_Rencana}')" class="p-1.5 text-brand-400"><i class="fa-solid fa-pen"></i></button>
                                                 <button onclick="deleteRencanaAction('${r.ID_Rencana}')" class="p-1.5 text-red-500"><i class="fa-solid fa-trash"></i></button>
                                             </td>
                                         </tr>
@@ -1479,11 +1752,11 @@
                                 <div class="p-5 rounded-2xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-2.5">
                                     <div class="flex justify-between items-center">
                                         <div class="flex items-center gap-2">
-                                            <span class="px-2.5 py-0.5 rounded-lg bg-brand-500/15 text-brand-500 font-extrabold text-xs">${r.Pertemuan}</span>
+                                            <span class="px-2.5 py-0.5 rounded-lg bg-brand-500/15 text-brand-400 font-extrabold text-xs">${r.Pertemuan}</span>
                                             <span class="text-xs text-gray-500">${r.Tanggal} • ${r.Sekolah}</span>
                                         </div>
                                         <div>
-                                            <button onclick="openRencanaModal('${r.ID_Rencana}')" class="p-1 text-gray-400 hover:text-brand-500"><i class="fa-solid fa-pen"></i></button>
+                                            <button onclick="openRencanaModal('${r.ID_Rencana}')" class="p-1 text-gray-400 hover:text-brand-400"><i class="fa-solid fa-pen"></i></button>
                                             <button onclick="deleteRencanaAction('${r.ID_Rencana}')" class="p-1 text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                                         </div>
                                     </div>
@@ -1541,14 +1814,29 @@
                 Deadline_Tugas: document.getElementById("rm-deadline").value
             };
             closeRencanaModal();
-            const res = await callGAS({ action: "saveRencana", item }, true, "Menyimpan rencana sesi...");
-            if (res.status === "ok") { showToast("Rencana sesi tersimpan!"); await syncDatabase(false, true); }
+
+            const idx = db.perencanaan.findIndex(x => String(x.ID_Rencana) === String(item.ID_Rencana));
+            if (idx !== -1) db.perencanaan[idx] = item;
+            else db.perencanaan.push(item);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Rencana sesi tersimpan!");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "saveRencana", item }, false);
+            setRealtimeIndicator(false);
         }
 
         async function deleteRencanaAction(id) {
             if (!confirm("Hapus rencana sesi ini?")) return;
-            const res = await callGAS({ action: "deleteRencana", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true, true);
+            db.perencanaan = db.perencanaan.filter(x => String(x.ID_Rencana) !== String(id));
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Rencana sesi dihapus.");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "deleteRencana", id }, false);
+            setRealtimeIndicator(false);
         }
 
         // =====================================================================
@@ -1564,7 +1852,7 @@
                 <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Riwayat Jurnal Pertemuan (${list.length})</h3>
-                        <button onclick="openJurnalModal()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl">
+                        <button onclick="openJurnalModal()" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">
                             <i class="fa-solid fa-plus mr-1"></i> Catat Jurnal Baru
                         </button>
                     </div>
@@ -1573,13 +1861,13 @@
                             <div class="p-5 rounded-2xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder space-y-2">
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-0.5 rounded bg-brand-500/15 text-brand-500 font-bold text-xs">${j.Pertemuan}</span>
+                                        <span class="px-2.5 py-0.5 rounded bg-brand-500/15 text-brand-400 font-bold text-xs">${j.Pertemuan}</span>
                                         <span class="text-xs font-semibold">${j.Tanggal}</span>
                                         <span class="text-[11px] px-2 py-0.5 rounded bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder">${j.Sekolah}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <span class="text-[11px] text-emerald-500 font-bold">${j.Jenis_Sesi}</span>
-                                        <button onclick="openJurnalModal('${j.ID_Jurnal}')" class="text-gray-400 hover:text-brand-500"><i class="fa-solid fa-pen"></i></button>
+                                        <button onclick="openJurnalModal('${j.ID_Jurnal}')" class="text-gray-400 hover:text-brand-400"><i class="fa-solid fa-pen"></i></button>
                                         <button onclick="deleteJurnalAction('${j.ID_Jurnal}')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                                     </div>
                                 </div>
@@ -1628,24 +1916,46 @@
                 Evaluasi: document.getElementById("jm-evaluasi").value
             };
             closeJurnalModal();
-            const res = await callGAS({ action: "saveJurnal", item }, true, "Menyimpan jurnal...");
-            if (res.status === "ok") { showToast("Jurnal berhasil disimpan!"); await syncDatabase(false, true); }
+
+            const idx = db.jurnal.findIndex(x => String(x.ID_Jurnal) === String(item.ID_Jurnal));
+            if (idx !== -1) db.jurnal[idx] = item;
+            else db.jurnal.push(item);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Jurnal berhasil disimpan!");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "saveJurnal", item }, false);
+            setRealtimeIndicator(false);
         }
 
         async function deleteJurnalAction(id) {
             if (!confirm("Hapus jurnal ini?")) return;
-            const res = await callGAS({ action: "deleteJurnal", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true, true);
+            db.jurnal = db.jurnal.filter(x => String(x.ID_Jurnal) !== String(id));
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Jurnal dihapus.");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "deleteJurnal", id }, false);
+            setRealtimeIndicator(false);
         }
 
         // =====================================================================
-        // 10. MATERI E-COURSE (VIDEO / E-BOOK PDF A4 / CHEATSHEET)
+        // 10. MATERI E-COURSE + FILTER DAFTAR MATERI TERBIT
         // =====================================================================
         let tempCoverBase64 = "";
         let tempPdfBase64 = "";
 
         function renderMateriManager(container) {
             const cats = JSON.parse(db.settings.categoriesJSON || '["Dasar Fotografi","Komposisi & Visual","Bisnis Fotografi"]');
+
+            const filteredMateri = db.materi.filter(m => {
+                const matchFmt = materiFormatFilter === "all" || String(m.Format).toLowerCase() === materiFormatFilter;
+                const matchCat = materiCategoryFilter === "all" || String(m.Kategori) === materiCategoryFilter;
+                return matchFmt && matchCat;
+            });
+
             container.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4 h-fit">
@@ -1664,7 +1974,7 @@
                                 </div>
                                 <div>
                                     <label class="block font-semibold mb-1">Format</label>
-                                    <select id="mat-format" onchange="toggleMatFormat(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl font-bold text-brand-500">
+                                    <select id="mat-format" onchange="toggleMatFormat(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl font-bold text-brand-400">
                                         <option value="video">Video YouTube</option>
                                         <option value="ebook">E-Book PDF (A4)</option>
                                         <option value="cheatsheet">Cheatsheet PDF (A4)</option>
@@ -1699,22 +2009,37 @@
                                 <label class="block font-semibold mb-1">Rangkuman Materi</label>
                                 <textarea id="mat-rangkuman" rows="3" required class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl"></textarea>
                             </div>
-                            <button type="submit" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl">Terbitkan Materi</button>
+                            <button type="submit" class="btn-smooth w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20">Terbitkan Materi</button>
                         </form>
                     </div>
 
-                    <div class="lg:col-span-7 bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-3">
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Daftar Materi Terbit (${db.materi.length})</h3>
-                        ${db.materi.map(m => `
-                            <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex justify-between items-start gap-3">
-                                <div>
-                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-500/15 text-brand-500">${m.Format} • ${m.Kategori}</span>
-                                    <h4 class="text-xs font-extrabold text-slate-900 dark:text-white mt-1">${m.Judul}</h4>
-                                    <p class="text-[11px] text-gray-500 mt-0.5">${m.Rangkuman}</p>
-                                </div>
-                                <button onclick="deleteMateriAction('${m.ID_Materi}')" class="text-red-500 p-1.5"><i class="fa-solid fa-trash"></i></button>
+                    <div class="lg:col-span-7 bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-darkborder">
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Daftar Materi Terbit (${filteredMateri.length} / ${db.materi.length})</h3>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="materiFormatFilter='all'; renderCurrentTab()" class="btn-smooth px-2.5 py-1 rounded-lg text-[11px] font-bold ${materiFormatFilter === 'all' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Semua</button>
+                                <button onclick="materiFormatFilter='video'; renderCurrentTab()" class="btn-smooth px-2.5 py-1 rounded-lg text-[11px] font-bold ${materiFormatFilter === 'video' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Video</button>
+                                <button onclick="materiFormatFilter='ebook'; renderCurrentTab()" class="btn-smooth px-2.5 py-1 rounded-lg text-[11px] font-bold ${materiFormatFilter === 'ebook' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">E-Book</button>
+                                <button onclick="materiFormatFilter='cheatsheet'; renderCurrentTab()" class="btn-smooth px-2.5 py-1 rounded-lg text-[11px] font-bold ${materiFormatFilter === 'cheatsheet' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-obsidian text-gray-500'}">Cheatsheet</button>
+                                <select onchange="materiCategoryFilter=this.value; renderCurrentTab()" class="px-2.5 py-1 bg-slate-100 dark:bg-obsidian border border-slate-200 dark:border-darkborder rounded-lg text-[11px] font-semibold">
+                                    <option value="all" ${materiCategoryFilter === 'all' ? 'selected' : ''}>Semua Kategori</option>
+                                    ${cats.map(c => `<option value="${c}" ${materiCategoryFilter === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                </select>
                             </div>
-                        `).join('') || '<p class="text-xs text-gray-500 italic">Belum ada materi E-Course.</p>'}
+                        </div>
+
+                        <div class="space-y-3">
+                            ${filteredMateri.map(m => `
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-obsidian border border-slate-200 dark:border-darkborder flex justify-between items-start gap-3">
+                                    <div>
+                                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-500/15 text-brand-400">${m.Format} • ${m.Kategori}</span>
+                                        <h4 class="text-xs font-extrabold text-slate-900 dark:text-white mt-1">${m.Judul}</h4>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">${m.Rangkuman}</p>
+                                    </div>
+                                    <button onclick="deleteMateriAction('${m.ID_Materi}')" class="btn-smooth text-red-500 p-1.5 hover:bg-red-500/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            `).join('') || '<p class="text-xs text-gray-500 italic text-center py-6">Tidak ada materi yang sesuai filter.</p>'}
+                        </div>
                     </div>
                 </div>
             `;
@@ -1741,6 +2066,7 @@
             e.preventDefault();
             const fmt = document.getElementById("mat-format").value;
             const materi = {
+                ID_Materi: "MAT-" + Date.now(),
                 Judul: document.getElementById("mat-judul").value,
                 Kategori: document.getElementById("mat-kategori").value,
                 Format: fmt,
@@ -1752,18 +2078,30 @@
                 Rangkuman: document.getElementById("mat-rangkuman").value
             };
             tempCoverBase64 = ""; tempPdfBase64 = "";
-            const res = await callGAS({ action: "saveMateri", materi }, true, "Mengunggah materi ke Google Drive...");
-            if (res.status === "ok") { showToast(res.message); await syncDatabase(false, true); }
+
+            setRealtimeIndicator(true);
+            showToast("Mengunggah materi ke Google Drive...");
+            const res = await callGAS({ action: "saveMateri", materi }, false);
+            if (res.status === "ok") {
+                showToast(res.message);
+                await syncDatabase(false, true);
+            }
         }
 
         async function deleteMateriAction(id) {
             if (!confirm("Hapus materi ini?")) return;
-            const res = await callGAS({ action: "deleteMateri", id }, true, "Menghapus...");
-            if (res.status === "ok") await syncDatabase(true, true);
+            db.materi = db.materi.filter(m => String(m.ID_Materi) !== String(id));
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Materi dihapus.");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "deleteMateri", id }, false);
+            setRealtimeIndicator(false);
         }
 
         // =====================================================================
-        // 11. REKAP NILAI AKHIR (20% PRESENSI + 80% KARYA) & CETAK RAPORT A4
+        // 11. REKAP NILAI AKHIR (FILTER SEKOLAH) & CETAK RAPORT A4
         // =====================================================================
         function computeStudentRekap(siswaObj) {
             const pCols = getMeetingColumns();
@@ -1797,15 +2135,35 @@
         }
 
         function renderRekapNilai(container) {
-            const approved = db.siswa.filter(s => s.Status_Akun === "Approved" && matchSchoolAndGrade(s.Sekolah, s.Kelas));
+            const approved = db.siswa.filter(s => {
+                if (s.Status_Akun !== "Approved") return false;
+                if (!matchSchoolAndGrade(s.Sekolah, s.Kelas)) return false;
+                if (rekapSchoolFilter !== "ALL") {
+                    const isSMK = String(s.Sekolah).toUpperCase().includes("SMK");
+                    if (rekapSchoolFilter === "SMK" && !isSMK) return false;
+                    if (rekapSchoolFilter === "MA" && isSMK) return false;
+                }
+                return true;
+            });
+
             container.innerHTML = `
                 <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl space-y-4">
-                    <div class="flex justify-between items-center">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-darkborder">
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Rekap Nilai Akhir (20% Kehadiran + 80% Karya Rubrik)</h3>
-                            <p class="text-xs text-gray-500">Otomatis dihitung dari matriks presensi dan seluruh tugas yang sudah dinilai.</p>
+                            <p class="text-xs text-gray-500">Filter berdasarkan unit sekolah di samping atau cetak laporan resmi A4.</p>
                         </div>
-                        <button onclick="switchTab('cetak')" class="px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl">Buka Modul Cetak A4</button>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Tombol Filter Berdasarkan Sekolah -->
+                            <div class="flex items-center gap-1 bg-slate-100 dark:bg-obsidian p-1 rounded-xl border border-slate-200 dark:border-darkborder">
+                                <button onclick="rekapSchoolFilter='ALL'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rekapSchoolFilter === 'ALL' ? 'bg-brand-600 text-white shadow' : 'text-gray-500 hover:text-slate-900 dark:hover:text-white'}">Semua Sekolah</button>
+                                <button onclick="rekapSchoolFilter='SMK'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rekapSchoolFilter === 'SMK' ? 'bg-brand-600 text-white shadow' : 'text-gray-500 hover:text-slate-900 dark:hover:text-white'}">SMKN 65 Jakarta</button>
+                                <button onclick="rekapSchoolFilter='MA'; renderCurrentTab()" class="btn-smooth px-3 py-1.5 rounded-lg text-xs font-bold ${rekapSchoolFilter === 'MA' ? 'bg-brand-600 text-white shadow' : 'text-gray-500 hover:text-slate-900 dark:hover:text-white'}">MA Al-Hikmah</button>
+                            </div>
+
+                            <button onclick="switchTab('cetak')" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl">Buka Modul Cetak A4</button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -1816,7 +2174,7 @@
                                     <th class="px-3 py-3">Sekolah & Kelas</th>
                                     <th class="px-3 py-3 text-center">Presensi (20%)</th>
                                     <th class="px-3 py-3 text-center">Karya (80%)</th>
-                                    <th class="px-3 py-3 text-center text-brand-500">Nilai Akhir</th>
+                                    <th class="px-3 py-3 text-center text-brand-400">Nilai Akhir</th>
                                     <th class="px-3 py-3 text-center">Predikat</th>
                                     <th class="px-3 py-3">Catatan Evaluasi</th>
                                 </tr>
@@ -1831,12 +2189,12 @@
                                             <td class="px-3 py-2.5">${s.Sekolah} (${s.Kelas})</td>
                                             <td class="px-3 py-2.5 text-center">${rk.nilaiPresensi}</td>
                                             <td class="px-3 py-2.5 text-center">${rk.nilaiKarya}</td>
-                                            <td class="px-3 py-2.5 text-center font-extrabold text-brand-500 text-sm">${rk.nilaiAkhir}</td>
+                                            <td class="px-3 py-2.5 text-center font-extrabold text-brand-400 text-sm">${rk.nilaiAkhir}</td>
                                             <td class="px-3 py-2.5 text-center"><span class="px-2.5 py-0.5 rounded font-bold bg-emerald-500/15 text-emerald-500">${rk.predikat}</span></td>
                                             <td class="px-3 py-2.5 italic text-gray-500">${rk.catatan}</td>
                                         </tr>
                                     `;
-                                }).join('') || '<tr><td colspan="8" class="py-6 text-center text-gray-500">Belum ada data siswa.</td></tr>'}
+                                }).join('') || '<tr><td colspan="8" class="py-6 text-center text-gray-500">Belum ada data siswa aktif pada filter ini.</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -1863,7 +2221,7 @@
                             <option value="SMK" ${isSMK ? 'selected' : ''}>Unit SMKN 65 Jakarta</option>
                             <option value="MA" ${!isSMK ? 'selected' : ''}>Unit MA Al-Hikmah</option>
                         </select>
-                        <button onclick="window.print()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20">
+                        <button onclick="window.print()" class="btn-smooth px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/20">
                             <i class="fa-solid fa-print mr-1"></i> Print / Simpan PDF A4
                         </button>
                     </div>
@@ -2000,7 +2358,7 @@
                                     <input type="text" id="set-tgl" value="${s.tglCetak || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
                                 </div>
                             </div>
-                            <button type="submit" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl">Simpan Pengaturan Kop</button>
+                            <button type="submit" class="btn-smooth px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl">Simpan Pengaturan Kop</button>
                         </form>
                     </div>
 
@@ -2009,7 +2367,7 @@
                             <h4 class="font-bold text-slate-900 dark:text-white">Daftar Pilihan Tugas (Portal Murid)</h4>
                             <div class="flex gap-2">
                                 <input type="text" id="new-asg-input" placeholder="Tambah judul tugas..." class="flex-1 px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
-                                <button onclick="addMasterItem('assignmentsJSON', 'new-asg-input')" class="px-3 py-2 bg-brand-500 text-white font-bold rounded-xl">+</button>
+                                <button onclick="addMasterItem('assignmentsJSON', 'new-asg-input')" class="btn-smooth px-3 py-2 bg-brand-600 text-white font-bold rounded-xl">+</button>
                             </div>
                             <div class="space-y-1.5">
                                 ${asgs.map((a, i) => `<div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-obsidian rounded-lg"><span>${a}</span><button onclick="removeMasterItem('assignmentsJSON', ${i})" class="text-red-500"><i class="fa-solid fa-xmark"></i></button></div>`).join('')}
@@ -2020,7 +2378,7 @@
                             <h4 class="font-bold text-slate-900 dark:text-white">Kategori Materi E-Course</h4>
                             <div class="flex gap-2">
                                 <input type="text" id="new-cat-input" placeholder="Tambah kategori..." class="flex-1 px-3 py-2 bg-slate-50 dark:bg-obsidian border border-slate-300 dark:border-darkborder rounded-xl">
-                                <button onclick="addMasterItem('categoriesJSON', 'new-cat-input')" class="px-3 py-2 bg-brand-500 text-white font-bold rounded-xl">+</button>
+                                <button onclick="addMasterItem('categoriesJSON', 'new-cat-input')" class="btn-smooth px-3 py-2 bg-brand-600 text-white font-bold rounded-xl">+</button>
                             </div>
                             <div class="space-y-1.5">
                                 ${cats.map((c, i) => `<div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-obsidian rounded-lg"><span>${c}</span><button onclick="removeMasterItem('categoriesJSON', ${i})" class="text-red-500"><i class="fa-solid fa-xmark"></i></button></div>`).join('')}
@@ -2045,8 +2403,13 @@
                 pengajar: document.getElementById("set-pengajar").value,
                 tglCetak: document.getElementById("set-tgl").value
             };
-            const res = await callGAS({ action: "saveSettings", settings: updates }, true, "Menyimpan kop surat...");
-            if (res.status === "ok") { showToast(res.message); await syncDatabase(false, true); }
+            Object.assign(db.settings, updates);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            showToast("Pengaturan kop surat disimpan!");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "saveSettings", settings: updates }, false);
+            setRealtimeIndicator(false);
         }
 
         async function addMasterItem(key, inputId) {
@@ -2054,21 +2417,33 @@
             if (!val) return;
             const list = JSON.parse(db.settings[key] || "[]");
             list.push(val);
-            const res = await callGAS({ action: "saveSettings", settings: { [key]: list } }, true, "Menambahkan item...");
-            if (res.status === "ok") await syncDatabase(true, true);
+            db.settings[key] = JSON.stringify(list);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Item ditambahkan!");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "saveSettings", settings: { [key]: list } }, false);
+            setRealtimeIndicator(false);
         }
 
         async function removeMasterItem(key, idx) {
             const list = JSON.parse(db.settings[key] || "[]");
             list.splice(idx, 1);
-            const res = await callGAS({ action: "saveSettings", settings: { [key]: list } }, true, "Menghapus item...");
-            if (res.status === "ok") await syncDatabase(true, true);
+            db.settings[key] = JSON.stringify(list);
+            localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(db));
+            renderCurrentTab();
+            showToast("Item dihapus.");
+
+            setRealtimeIndicator(true);
+            await callGAS({ action: "saveSettings", settings: { [key]: list } }, false);
+            setRealtimeIndicator(false);
         }
 
         function showToast(msg, type = "success") {
             const c = document.getElementById("toast-container");
             const el = document.createElement("div");
-            el.className = `px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl ${type === "success" ? "bg-brand-500" : "bg-red-600"}`;
+            el.className = `px-4 py-3 rounded-xl text-xs font-bold text-white shadow-xl ${type === "success" ? "bg-brand-600" : "bg-red-600"}`;
             el.innerText = msg;
             c.appendChild(el);
             setTimeout(() => el.remove(), 3000);
